@@ -1,0 +1,514 @@
+<Window x:Class="AISecurityGateway.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AISecurityGateway"
+        mc:Ignorable="d"
+        Title="Zero-Trust AI Security Gateway" Height="680" Width="1050"
+        WindowStartupLocation="CenterScreen"
+        Background="#14161C">
+    
+    <Window.Resources>
+        <!-- Modern Fonts & Color Palette -->
+        <SolidColorBrush x:Key="BgDark" Color="#14161C"/>
+        <SolidColorBrush x:Key="SidebarBg" Color="#0D0E12"/>
+        <SolidColorBrush x:Key="CardBg" Color="#1E222B"/>
+        <SolidColorBrush x:Key="CardHoverBg" Color="#252A36"/>
+        <SolidColorBrush x:Key="AccentCyan" Color="#00D2FF"/>
+        <SolidColorBrush x:Key="AccentMint" Color="#00F29B"/>
+        <SolidColorBrush x:Key="AccentRed" Color="#FF5C5C"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#F7FAFC"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#A0AEC0"/>
+        <SolidColorBrush x:Key="BorderBrushDark" Color="#2E3440"/>
+        <SolidColorBrush x:Key="TerminalBg" Color="#08090C"/>
+        
+        <!-- Sidebar Button Style -->
+        <Style x:Key="SidebarBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#A0AEC0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="15,0,0,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="0" CornerRadius="8" Margin="5,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter Grid.ColumnSpan="2" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1E222B"/>
+                                <Setter Property="Foreground" Value="#00D2FF"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#4A5568"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Standard Accent Button -->
+        <Style x:Key="AccentBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1E222B"/>
+            <Setter Property="Foreground" Value="#00D2FF"/>
+            <Setter Property="BorderBrush" Value="#00D2FF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#00D2FF"/>
+                                <Setter Property="Foreground" Value="#0D0E12"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#00A2C2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Text Box Style -->
+        <Style x:Key="ModernTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#1E222B"/>
+            <Setter Property="Foreground" Value="#F7FAFC"/>
+            <Setter Property="BorderBrush" Value="#2E3440"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="SelectionBrush" Value="#00D2FF"/>
+            <Setter Property="CaretBrush" Value="#F7FAFC"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="true">
+                                <Setter Property="BorderBrush" Value="#00D2FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Styled ListBox -->
+        <Style x:Key="DarkListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="#0D0E12"/>
+            <Setter Property="Foreground" Value="#F7FAFC"/>
+            <Setter Property="BorderBrush" Value="#2E3440"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="8,6"/>
+                        <Setter Property="Margin" Value="2"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="border" Background="Transparent" CornerRadius="4" SnapsToDevicePixels="true">
+                                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="true">
+                                            <Setter Property="Background" Value="#1E222B"/>
+                                            <Setter Property="TextElement.Foreground" Value="#00D2FF"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="true">
+                                            <Setter Property="Background" Value="#2E3440"/>
+                                            <Setter Property="TextElement.Foreground" Value="#00F29B"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <!-- SIDEBAR -->
+        <Border Grid.Column="0" Background="{StaticResource SidebarBg}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="0,0,1,0">
+            <Grid Margin="15">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Logo Header -->
+                <StackPanel Grid.Row="0" Margin="0,10,0,30" Orientation="Vertical">
+                    <TextBlock Text="🛡️ ZERO-TRUST" Foreground="{StaticResource AccentCyan}" FontSize="20" FontWeight="ExtraBold"/>
+                    <TextBlock Text="AI Security Gateway" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="4,2,0,0" FontWeight="SemiBold"/>
+                </StackPanel>
+                
+                <!-- Sidebar Navigation Menu -->
+                <StackPanel Grid.Row="1">
+                    <Button Content="📊 Dashboard" Style="{StaticResource SidebarBtnStyle}" Click="NavDashboard_Click" Margin="0,0,0,5"/>
+                    <Button Content="🧹 Storage Purger" Style="{StaticResource SidebarBtnStyle}" Click="NavStorage_Click" Margin="0,0,0,5"/>
+                    <Button Content="⚙️ Settings" Style="{StaticResource SidebarBtnStyle}" Click="NavSettings_Click" Margin="0,0,0,5"/>
+                </StackPanel>
+                
+                <!-- Sidebar Footer Status -->
+                <Border Grid.Row="2" Background="#14161C" CornerRadius="8" Padding="12" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1">
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
+                            <Ellipse Width="10" Height="10" Fill="{StaticResource AccentMint}" x:Name="StatusLedDot" Margin="0,0,8,0">
+                                <Ellipse.Effect>
+                                    <BlurEffect Radius="6"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <TextBlock Text="GATEWAY ONLINE" Foreground="{StaticResource TextPrimary}" FontSize="11" FontWeight="Bold"/>
+                        </StackPanel>
+                        <TextBlock Text="Local AI: Llama 3.2 (3B)" Foreground="{StaticResource TextSecondary}" FontSize="10" x:Name="TxtStatusModel"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+        
+        <!-- MAIN CONTENT AREA -->
+        <Grid Grid.Column="1" Margin="25">
+            <!-- TAB CONTROL (Headers hidden, programmatically switched) -->
+            <TabControl x:Name="MainTabControl" Background="Transparent" BorderThickness="0" Padding="0">
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </Style>
+                </TabControl.Resources>
+                
+                <!-- TAB 1: DASHBOARD -->
+                <TabItem x:Name="TabDashboard">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Title -->
+                            <RowDefinition Height="Auto"/> <!-- Cards Grid -->
+                            <RowDefinition Height="*"/>    <!-- Main View (Lists + Terminal) -->
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header Title -->
+                        <Grid Grid.Row="0" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="Security Pipeline Dashboard" Foreground="{StaticResource TextPrimary}" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="Scrubbing sensitive PII elements and structuring local logs automatically." Foreground="{StaticResource TextSecondary}" FontSize="13" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Cards Grid (Row 1) -->
+                        <Grid Grid.Row="1" Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Card 1: Processed Files -->
+                            <Border Grid.Column="0" Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" Margin="0,0,10,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <StackPanel>
+                                    <TextBlock Text="Processed Files" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="0" Foreground="{StaticResource TextPrimary}" FontSize="32" FontWeight="Bold" Margin="0,5,0,0" x:Name="TxtProcessedCount"/>
+                                    <TextBlock Text="🔄 Pipeline Active" Foreground="{StaticResource AccentCyan}" FontSize="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 2: PII Redacted -->
+                            <Border Grid.Column="1" Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" Margin="5,0,5,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <StackPanel>
+                                    <TextBlock Text="PII Shields Activated" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="0" Foreground="{StaticResource TextPrimary}" FontSize="32" FontWeight="Bold" Margin="0,5,0,0" x:Name="TxtRedactedCount"/>
+                                    <TextBlock Text="🛡️ Auto-Redacting PII" Foreground="{StaticResource AccentMint}" FontSize="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 3: Storage Reclaimed -->
+                            <Border Grid.Column="2" Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" Margin="10,0,0,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <StackPanel>
+                                    <TextBlock Text="Downloads Cleaned" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="0 KB" Foreground="{StaticResource TextPrimary}" FontSize="32" FontWeight="Bold" Margin="0,5,0,0" x:Name="TxtStorageReclaimed"/>
+                                    <TextBlock Text="🧹 Storage Optimizations" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        
+                        <!-- Lists and Terminal (Row 2) -->
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="1*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Queue status (Row 0: Dropzone and Clean Outputs) -->
+                            <Grid Grid.Row="0" Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Input Dropzone Queue -->
+                                <Border Grid.Column="0" Background="{StaticResource CardBg}" CornerRadius="8" Padding="12" Margin="0,0,8,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                                            <TextBlock Text="📂 Dropzone Input Queue" Foreground="{StaticResource TextPrimary}" FontSize="14" FontWeight="Bold" Width="200"/>
+                                            <TextBlock Text="(0 files)" Foreground="{StaticResource TextSecondary}" FontSize="12" VerticalAlignment="Center" x:Name="TxtInputQueueCount"/>
+                                        </StackPanel>
+                                        <ListBox Grid.Row="1" Style="{StaticResource DarkListBoxStyle}" x:Name="LstDropzoneFiles"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Clean Outputs -->
+                                <Border Grid.Column="1" Background="{StaticResource CardBg}" CornerRadius="8" Padding="12" Margin="8,0,0,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="✨ Anonymized Outputs" Foreground="{StaticResource TextPrimary}" FontSize="14" FontWeight="Bold" Width="200"/>
+                                            <TextBlock Text="(0 files)" Foreground="{StaticResource TextSecondary}" FontSize="12" VerticalAlignment="Center" x:Name="TxtCleanOutputCount"/>
+                                        </StackPanel>
+                                        <ListBox Grid.Row="1" Style="{StaticResource DarkListBoxStyle}" x:Name="LstCleanFiles"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                            
+                            <!-- Terminal logs (Row 1) -->
+                            <Border Grid.Row="1" Background="{StaticResource TerminalBg}" CornerRadius="8" Padding="12" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                                        <TextBlock Grid.Column="0" Text="💬 Pipeline Console Logs" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <CheckBox Content="Auto Watcher" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,15,0" x:Name="ChkAutoWatcher" IsChecked="True" Checked="ChkAutoWatcher_Changed" Unchecked="ChkAutoWatcher_Changed"/>
+                                            <Button Content="Manual Sweep" Style="{StaticResource AccentBtnStyle}" Click="BtnManualSweep_Click" Padding="10,4" Margin="0,0,10,0"/>
+                                            <Button Content="Clear Logs" Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextSecondary}" Cursor="Hand" Click="BtnClearLogs_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    
+                                    <TextBox Grid.Row="1" Background="Transparent" Foreground="#00F29B" BorderThickness="0" 
+                                             IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                             FontFamily="Consolas" FontSize="11" x:Name="TxtConsoleLog"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+                
+                <!-- TAB 2: STORAGE PURGER -->
+                <TabItem x:Name="TabStorage">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header Title -->
+                        <Grid Grid.Row="0" Margin="0,0,0,25">
+                            <StackPanel>
+                                <TextBlock Text="Storage Maintenance Controller" Foreground="{StaticResource TextPrimary}" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="Clean temporary system assets, remove expired setup files, and archive completed data." Foreground="{StaticResource TextSecondary}" FontSize="13" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Maintenance Operations -->
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Left: Maintenance Rules list -->
+                            <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                                <Border Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}" Margin="0,0,0,15">
+                                    <StackPanel>
+                                        <TextBlock Text="Downloads Purge Rules" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold" Margin="0,0,0,10"/>
+                                        <Separator Background="{StaticResource BorderBrushDark}" Margin="0,0,0,10"/>
+                                        
+                                        <CheckBox IsChecked="True" Content="Delete expired setup installers (.exe, .msi) older than 3 days" Foreground="{StaticResource TextPrimary}" x:Name="ChkPurgeExecutables" Margin="0,0,0,8"/>
+                                        <CheckBox IsChecked="True" Content="Archive bulky documents (.zip, .pdf, .docx) older than 14 days" Foreground="{StaticResource TextPrimary}" x:Name="ChkArchiveDocuments" Margin="0,0,0,15"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                            <Button Content="Run Downloads Scan" Style="{StaticResource AccentBtnStyle}" Click="BtnScanDownloads_Click" Margin="0,0,12,0"/>
+                                            <Button Content="Execute Smart Storage Purge" Style="{StaticResource AccentBtnStyle}" BorderBrush="{StaticResource AccentRed}" Foreground="{StaticResource AccentRed}" Click="BtnExecutePurge_Click"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                    <StackPanel>
+                                        <TextBlock Text="Pipeline Archival Rules" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold" Margin="0,0,0,10"/>
+                                        <Separator Background="{StaticResource BorderBrushDark}" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Data records that are standardized in the Clean_Output folder are automatically routed to the Archive folder after standard retention." TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,12"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,15">
+                                            <TextBlock Text="Data retention period (days):" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBox Text="2" Width="60" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtRetentionDays"/>
+                                        </StackPanel>
+                                        
+                                        <Button Content="Route Clean Data to Archive" Style="{StaticResource AccentBtnStyle}" HorizontalAlignment="Left" Click="BtnRouteData_Click"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            
+                            <!-- Right: Storage Stats & Report -->
+                            <Border Grid.Column="1" Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Grid.Row="0" Text="📊 Maintenance Inspection Logs" Foreground="{StaticResource TextPrimary}" FontSize="15" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    
+                                    <TextBox Grid.Row="1" Background="{StaticResource TerminalBg}" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushDark}"
+                                             IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                             FontFamily="Consolas" FontSize="11" x:Name="TxtStorageReport" Padding="8"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+                
+                <!-- TAB 3: SETTINGS -->
+                <TabItem x:Name="TabSettings">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header Title -->
+                        <Grid Grid.Row="0" Margin="0,0,0,25">
+                            <StackPanel>
+                                <TextBlock Text="System Settings" Foreground="{StaticResource TextPrimary}" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="Configure directory maps, Python environment, and Ollama integration models." Foreground="{StaticResource TextSecondary}" FontSize="13" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Settings Form -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <Border Background="{StaticResource CardBg}" CornerRadius="10" Padding="20" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}" Margin="0,0,10,0">
+                                <StackPanel>
+                                    
+                                    <!-- Workspace Paths -->
+                                    <TextBlock Text="📂 Workspace Folders" Foreground="{StaticResource AccentCyan}" FontSize="15" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <Separator Background="{StaticResource BorderBrushDark}" Margin="0,0,0,15"/>
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="10"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="10"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <!-- Input Dropzone -->
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Input Dropzone:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtInputDropzone"/>
+                                        <Button Grid.Row="0" Grid.Column="2" Content="Browse..." Margin="8,0,0,0" Style="{StaticResource AccentBtnStyle}" Click="BtnBrowseDropzone_Click"/>
+
+                                        <!-- Clean Output -->
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Clean Output:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtCleanOutput"/>
+                                        <Button Grid.Row="2" Grid.Column="2" Content="Browse..." Margin="8,0,0,0" Style="{StaticResource AccentBtnStyle}" Click="BtnBrowseCleanOutput_Click"/>
+
+                                        <!-- Archive Path -->
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Archive Path:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtArchive"/>
+                                        <Button Grid.Row="4" Grid.Column="2" Content="Browse..." Margin="8,0,0,0" Style="{StaticResource AccentBtnStyle}" Click="BtnBrowseArchive_Click"/>
+                                    </Grid>
+                                    
+                                    <!-- Python & AI Integration -->
+                                    <TextBlock Text="🐍 Python &amp; Local AI Configuration" Foreground="{StaticResource AccentCyan}" FontSize="15" FontWeight="Bold" Margin="0,20,0,5"/>
+                                    <Separator Background="{StaticResource BorderBrushDark}" Margin="0,0,0,15"/>
+                                    
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="10"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="10"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <!-- Python Executable -->
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Python Command/Path:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtPythonPath" Text="python"/>
+                                        <Button Grid.Row="0" Grid.Column="2" Content="Browse..." Margin="8,0,0,0" Style="{StaticResource AccentBtnStyle}" Click="BtnBrowsePython_Click"/>
+
+                                        <!-- Script Path -->
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Standardizer Script:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtScriptPath"/>
+                                        <Button Grid.Row="2" Grid.Column="2" Content="Browse..." Margin="8,0,0,0" Style="{StaticResource AccentBtnStyle}" Click="BtnBrowseScript_Click"/>
+
+                                        <!-- Ollama Model -->
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Ollama Model Name:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                        <ComboBox Grid.Row="4" Grid.Column="1" x:Name="CmbOllamaModel" Background="#1E222B" Foreground="#F7FAFC" BorderBrush="#2E3440" Height="32">
+                                            <ComboBoxItem Content="llama3.2:3b" IsSelected="True"/>
+                                            <ComboBoxItem Content="gemma:2b"/>
+                                            <ComboBoxItem Content="llama3:latest"/>
+                                        </ComboBox>
+                                    </Grid>
+                                    
+                                    <!-- Actions -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,25,0,0">
+                                        <Button Content="Reset Defaults" Style="{StaticResource AccentBtnStyle}" Click="BtnResetDefaults_Click" BorderBrush="{StaticResource AccentRed}" Foreground="{StaticResource AccentRed}" Margin="0,0,10,0"/>
+                                        <Button Content="Save Settings" Style="{StaticResource AccentBtnStyle}" Background="{StaticResource AccentCyan}" Foreground="#0D0E12" Click="BtnSaveSettings_Click"/>
+                                    </StackPanel>
+
+                                </StackPanel>
+                            </Border>
+                        </ScrollViewer>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </Grid>
+</Window>
