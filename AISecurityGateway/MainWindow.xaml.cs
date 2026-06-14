@@ -23,6 +23,12 @@ namespace AISecurityGateway
         private int redactedPiiCount = 0;
         private double storageReclaimedKb = 0;
 
+        // Subscription / Gating Logic
+        public enum SubscriptionTier { Free, Pro, Enterprise }
+        private SubscriptionTier currentTier = SubscriptionTier.Free;
+        private int freeFilesProcessedToday = 0;
+        private const int FreeDailyLimit = 5;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -42,6 +48,7 @@ namespace AISecurityGateway
             public string PythonPath { get; set; } = "python";
             public string ScriptPath { get; set; } = @"C:\Users\Cyrus\Documents\antigravity\splendid-tesla\data_standardizer.py";
             public string OllamaModel { get; set; } = "llama3.2:3b";
+            public string LicenseKey { get; set; } = "";
         }
 
         private void LoadSettings()
@@ -70,6 +77,7 @@ namespace AISecurityGateway
             TxtArchive.Text = settings.ArchivePath;
             TxtPythonPath.Text = settings.PythonPath;
             TxtScriptPath.Text = settings.ScriptPath;
+            TxtLicenseKey.Text = settings.LicenseKey;
             
             // Set combo box selection
             foreach (ComboBoxItem item in CmbOllamaModel.Items)
@@ -81,6 +89,9 @@ namespace AISecurityGateway
                 }
             }
             TxtStatusModel.Text = $"Local AI: {settings.OllamaModel}";
+
+            // Validate License Key on load
+            ApplyLicenseKey(settings.LicenseKey, silent: true);
         }
 
         private void SaveSettings()
@@ -94,7 +105,8 @@ namespace AISecurityGateway
                     ArchivePath = TxtArchive.Text.Trim(),
                     PythonPath = TxtPythonPath.Text.Trim(),
                     ScriptPath = TxtScriptPath.Text.Trim(),
-                    OllamaModel = (CmbOllamaModel.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "llama3.2:3b"
+                    OllamaModel = (CmbOllamaModel.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "llama3.2:3b",
+                    LicenseKey = TxtLicenseKey.Text.Trim()
                 };
 
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -110,6 +122,86 @@ namespace AISecurityGateway
             {
                 MessageBox.Show($"Error saving settings: {ex.Message}", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        #endregion
+
+        #region LICENSING & SUBSCRIPTION RULES
+
+        private void ApplyLicenseKey(string key, bool silent = false)
+        {
+            string cleanKey = key.Trim().ToUpper();
+            
+            if (cleanKey == "PRO-GATEWAY-2026")
+            {
+                currentTier = SubscriptionTier.Pro;
+                TxtLicenseStatus.Text = "PRO ACTIVE";
+                StatusLedDot.Fill = (System.Windows.Media.Brush)FindResource("AccentCyan");
+                if (!silent)
+                {
+                    LogMessage("[LICENSE SUCCESS]: Activated Developer Pro License Tier. Unlimited automation unlocked!");
+                    MessageBox.Show("Developer Pro License Activated successfully!\n- Unlimited processing\n- Automated directory watchers unlocked", "License Activated", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            else if (cleanKey == "ENT-GATEWAY-2026")
+            {
+                currentTier = SubscriptionTier.Enterprise;
+                TxtLicenseStatus.Text = "ENTERPRISE ACTIVE";
+                StatusLedDot.Fill = (System.Windows.Media.Brush)FindResource("AccentGold");
+                if (!silent)
+                {
+                    LogMessage("[LICENSE SUCCESS]: Activated Enterprise License Tier. Database logging and compliant routing unlocked!");
+                    MessageBox.Show("Enterprise License Activated successfully!\n- SQLite compliant db logger active\n- Custom dictionary masking active", "License Activated", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            else
+            {
+                currentTier = SubscriptionTier.Free;
+                TxtLicenseStatus.Text = "FREE ACTIVE";
+                StatusLedDot.Fill = (System.Windows.Media.Brush)FindResource("AccentMint");
+                
+                // If they entered an invalid key manually, alert them
+                if (!string.IsNullOrEmpty(cleanKey) && !silent)
+                {
+                    LogMessage("[LICENSE WARNING]: Invalid License Key. Defaulted to Free Basic Tier.");
+                    MessageBox.Show("The license key provided is invalid. Defaulting to Free Basic Tier.", "Invalid License Key", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+
+            // Sync features matching subscription gating
+            Dispatcher.Invoke(() =>
+            {
+                if (currentTier == SubscriptionTier.Free)
+                {
+                    // Force disable Auto Watcher for Free tier
+                    if (ChkAutoWatcher.IsChecked == true)
+                    {
+                        ChkAutoWatcher.IsChecked = false;
+                        SetupWatcher();
+                    }
+                }
+            });
+        }
+
+        private void BtnVerifyLicenseKey_Click(object sender, RoutedEventArgs e)
+        {
+            string key = TxtLicenseKey.Text.Trim();
+            ApplyLicenseKey(key);
+            SaveSettings(); // Save key locally
+        }
+
+        private void BtnActivatePro_Click(object sender, RoutedEventArgs e)
+        {
+            TxtLicenseKey.Text = "PRO-GATEWAY-2026";
+            ApplyLicenseKey("PRO-GATEWAY-2026");
+            SaveSettings();
+        }
+
+        private void BtnActivateEnt_Click(object sender, RoutedEventArgs e)
+        {
+            TxtLicenseKey.Text = "ENT-GATEWAY-2026";
+            ApplyLicenseKey("ENT-GATEWAY-2026");
+            SaveSettings();
         }
 
         #endregion
@@ -130,19 +222,22 @@ namespace AISecurityGateway
                 string dropzone = TxtInputDropzone.Text.Trim();
                 if (Directory.Exists(dropzone) && ChkAutoWatcher.IsChecked == true)
                 {
+                    // Gating check
+                    if (currentTier == SubscriptionTier.Free)
+                    {
+                        ChkAutoWatcher.IsChecked = false;
+                        LogMessage("[LICENSE REQUIRED]: Real-time directory monitoring requires a Developer Pro or Enterprise License.");
+                        MessageBox.Show("Real-time directory monitoring (Auto-Watcher) requires a Developer Pro or Enterprise license. Upgrade in the 'Licensing Plans' tab.", "License Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
                     fileWatcher = new FileSystemWatcher(dropzone);
                     fileWatcher.Filter = "*.*";
                     fileWatcher.Created += OnDropzoneChanged;
                     fileWatcher.Changed += OnDropzoneChanged;
                     fileWatcher.Renamed += OnDropzoneChanged;
                     fileWatcher.EnableRaisingEvents = true;
-                    StatusLedDot.Fill = (System.Windows.Media.Brush)FindResource("AccentMint");
                     LogMessage($"[WATCHER ACTIVE]: Monitoring {dropzone}");
-                }
-                else
-                {
-                    StatusLedDot.Fill = (System.Windows.Media.Brush)FindResource("AccentRed");
-                    LogMessage("[WATCHER INACTIVE]: Directory monitoring disabled or path invalid.");
                 }
             }
             catch (Exception ex)
@@ -166,6 +261,22 @@ namespace AISecurityGateway
 
         private void TriggerPipelineRun()
         {
+            // Gating check for Free tier limits
+            if (currentTier == SubscriptionTier.Free)
+            {
+                string dropzone = TxtInputDropzone.Text.Trim();
+                if (Directory.Exists(dropzone))
+                {
+                    int pendingFiles = Directory.GetFiles(dropzone).Length;
+                    if (pendingFiles > 0 && freeFilesProcessedToday >= FreeDailyLimit)
+                    {
+                        LogMessage($"[LICENSE GATE]: Free Tier daily limit of {FreeDailyLimit} files reached. Processing paused. Upgraded tiers unlock unlimited processing.");
+                        MessageBox.Show($"You have reached the Free Tier daily limit of {FreeDailyLimit} processed files. Please upgrade to Developer Pro or Enterprise to process more files.", "License Limit Reached", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+            }
+
             lock (processLock)
             {
                 if (isProcessing)
@@ -299,6 +410,13 @@ namespace AISecurityGateway
             {
                 processedFilesCount++;
                 TxtProcessedCount.Text = processedFilesCount.ToString();
+
+                // Increment Free limit file counter
+                if (currentTier == SubscriptionTier.Free)
+                {
+                    freeFilesProcessedToday++;
+                    LogMessage($"   🛡️ [LICENSE COUNTER]: {freeFilesProcessedToday}/{FreeDailyLimit} files processed today on Free tier.");
+                }
             }
         }
 
@@ -531,7 +649,8 @@ namespace AISecurityGateway
 
         private void NavDashboard_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 0;
         private void NavStorage_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 1;
-        private void NavSettings_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 2;
+        private void NavSubscription_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 2;
+        private void NavSettings_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 3;
 
         private void BtnClearLogs_Click(object sender, RoutedEventArgs e) => TxtConsoleLog.Clear();
 
@@ -606,6 +725,7 @@ namespace AISecurityGateway
             TxtArchive.Text = defaults.ArchivePath;
             TxtPythonPath.Text = defaults.PythonPath;
             TxtScriptPath.Text = defaults.ScriptPath;
+            TxtLicenseKey.Text = defaults.LicenseKey;
             
             foreach (ComboBoxItem item in CmbOllamaModel.Items)
             {

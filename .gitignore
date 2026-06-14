@@ -1,0 +1,23 @@
+# Build folders
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio files
+.vs/
+
+# Local configuration
+appsettings.json
+
+# Local Python temp files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Log files
+*.log

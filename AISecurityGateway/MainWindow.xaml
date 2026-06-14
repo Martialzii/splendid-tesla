@@ -17,6 +17,7 @@
         <SolidColorBrush x:Key="CardHoverBg" Color="#252A36"/>
         <SolidColorBrush x:Key="AccentCyan" Color="#00D2FF"/>
         <SolidColorBrush x:Key="AccentMint" Color="#00F29B"/>
+        <SolidColorBrush x:Key="AccentGold" Color="#FFD700"/>
         <SolidColorBrush x:Key="AccentRed" Color="#FF5C5C"/>
         <SolidColorBrush x:Key="TextPrimary" Color="#F7FAFC"/>
         <SolidColorBrush x:Key="TextSecondary" Color="#A0AEC0"/>
@@ -176,6 +177,7 @@
                 <StackPanel Grid.Row="1">
                     <Button Content="📊 Dashboard" Style="{StaticResource SidebarBtnStyle}" Click="NavDashboard_Click" Margin="0,0,0,5"/>
                     <Button Content="🧹 Storage Purger" Style="{StaticResource SidebarBtnStyle}" Click="NavStorage_Click" Margin="0,0,0,5"/>
+                    <Button Content="🔑 Licensing Plans" Style="{StaticResource SidebarBtnStyle}" Click="NavSubscription_Click" Margin="0,0,0,5"/>
                     <Button Content="⚙️ Settings" Style="{StaticResource SidebarBtnStyle}" Click="NavSettings_Click" Margin="0,0,0,5"/>
                 </StackPanel>
                 
@@ -188,7 +190,7 @@
                                     <BlurEffect Radius="6"/>
                                 </Ellipse.Effect>
                             </Ellipse>
-                            <TextBlock Text="GATEWAY ONLINE" Foreground="{StaticResource TextPrimary}" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="FREE ACTIVE" Foreground="{StaticResource TextPrimary}" FontSize="11" FontWeight="Bold" x:Name="TxtLicenseStatus"/>
                         </StackPanel>
                         <TextBlock Text="Local AI: Llama 3.2 (3B)" Foreground="{StaticResource TextSecondary}" FontSize="10" x:Name="TxtStatusModel"/>
                     </StackPanel>
@@ -315,7 +317,7 @@
                                     <Grid Grid.Row="0" Margin="0,0,0,6">
                                         <TextBlock Grid.Column="0" Text="💬 Pipeline Console Logs" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                            <CheckBox Content="Auto Watcher" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,15,0" x:Name="ChkAutoWatcher" IsChecked="True" Checked="ChkAutoWatcher_Changed" Unchecked="ChkAutoWatcher_Changed"/>
+                                            <CheckBox Content="Auto Watcher" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,15,0" x:Name="ChkAutoWatcher" IsChecked="False" Checked="ChkAutoWatcher_Changed" Unchecked="ChkAutoWatcher_Changed"/>
                                             <Button Content="Manual Sweep" Style="{StaticResource AccentBtnStyle}" Click="BtnManualSweep_Click" Padding="10,4" Margin="0,0,10,0"/>
                                             <Button Content="Clear Logs" Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextSecondary}" Cursor="Hand" Click="BtnClearLogs_Click"/>
                                         </StackPanel>
@@ -404,8 +406,136 @@
                         </Grid>
                     </Grid>
                 </TabItem>
+
+                <!-- TAB 3: LICENSING & SUBSCRIPTION -->
+                <TabItem x:Name="TabSubscription">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header Title -->
+                        <Grid Grid.Row="0" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="Billing &amp; Consumer Plans" Foreground="{StaticResource TextPrimary}" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="Select a subscription tier to activate features. Unlock full automation with developer keys." Foreground="{StaticResource TextSecondary}" FontSize="13" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Pricing Columns -->
+                            <Grid Grid.Row="0" Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Free Plan -->
+                                <Border Grid.Column="0" Background="{StaticResource CardBg}" CornerRadius="10" Padding="20" Margin="0,0,10,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                    <Grid>
+                                        <StackPanel>
+                                            <TextBlock Text="FREE BASIC" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,15">
+                                                <TextBlock Text="$0" Foreground="{StaticResource TextPrimary}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text="/month" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="4,0,0,8" VerticalAlignment="Bottom"/>
+                                            </StackPanel>
+                                            <TextBlock Text="Perfect for testing local log redaction and evaluating regex accuracy." Foreground="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Height="40" Margin="0,0,0,15"/>
+                                            <Separator Background="{StaticResource BorderBrushDark}" Margin="0,0,0,15"/>
+                                            
+                                            <StackPanel>
+                                                <TextBlock Text="✔️ Kenyan Phone &amp; Email Filtering" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Local Llama 3.2 Integration" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Manual File Scanning Sweeps" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="❌ 5 Files Processed Limit / Day" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                                <TextBlock Text="❌ Real-time Directory Monitoring" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="❌ Custom Configurable Pipelines" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Button Content="Active Plan" Style="{StaticResource AccentBtnStyle}" VerticalAlignment="Bottom" Height="38" IsEnabled="False" BorderBrush="{StaticResource BorderBrushDark}" Foreground="{StaticResource TextSecondary}"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Pro Plan -->
+                                <Border Grid.Column="1" Background="#222736" CornerRadius="10" Padding="20" Margin="5,0,5,0" BorderThickness="2" BorderBrush="{StaticResource AccentCyan}">
+                                    <Grid>
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,15">
+                                                <TextBlock Text="DEVELOPER PRO" Foreground="{StaticResource AccentCyan}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                <Border Background="{StaticResource AccentCyan}" CornerRadius="4" HorizontalAlignment="Right" Padding="6,2">
+                                                    <TextBlock Text="BEST VALUE" Foreground="#0D0E12" FontSize="9" FontWeight="Bold"/>
+                                                </Border>
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,15">
+                                                <TextBlock Text="$29" Foreground="{StaticResource TextPrimary}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text="/month" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="4,0,0,8" VerticalAlignment="Bottom"/>
+                                            </StackPanel>
+                                            <TextBlock Text="Full pipeline automation, directory watching, and unlimited processing for builders." Foreground="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Height="40" Margin="0,0,0,15"/>
+                                            <Separator Background="{StaticResource BorderBrushDark}" Margin="0,0,0,15"/>
+
+                                            <StackPanel>
+                                                <TextBlock Text="✔️ Everything in Free Plan" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Unlimited Processed Files" Foreground="{StaticResource TextPrimary}" FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Real-time Directory Watcher" Foreground="{StaticResource AccentCyan}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Custom Configurable Folders" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Background Daemon Automation" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="❌ Enterprise Multi-Agent Routing" Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Button x:Name="BtnActivatePro" Content="Activate Pro Tier" Style="{StaticResource AccentBtnStyle}" VerticalAlignment="Bottom" Height="38" Click="BtnActivatePro_Click"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Enterprise Plan -->
+                                <Border Grid.Column="2" Background="{StaticResource CardBg}" CornerRadius="10" Padding="20" Margin="10,0,0,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                    <Grid>
+                                        <StackPanel>
+                                            <TextBlock Text="ENTERPRISE SCALE" Foreground="{StaticResource AccentGold}" FontSize="11" FontWeight="Bold" Margin="0,0,0,15"/>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,15">
+                                                <TextBlock Text="$199" Foreground="{StaticResource TextPrimary}" FontSize="36" FontWeight="Bold"/>
+                                                <TextBlock Text="/month" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="4,0,0,8" VerticalAlignment="Bottom"/>
+                                            </StackPanel>
+                                            <TextBlock Text="Corporate compliance, database integrations, and customized PII redaction engines." Foreground="{StaticResource TextSecondary}" FontSize="12" TextWrapping="Wrap" Height="40" Margin="0,0,0,15"/>
+                                            <Separator Background="{StaticResource BorderBrushDark}" Margin="0,0,0,15"/>
+
+                                            <StackPanel>
+                                                <TextBlock Text="✔️ Everything in Developer Pro" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ SQLite Database Logging" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Multi-Model Concurrent Pipeline" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Custom PII Dictionary Rules" Foreground="{StaticResource AccentGold}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Advanced Storage Retention Policies" Foreground="{StaticResource TextPrimary}" FontSize="12" Margin="0,0,0,8"/>
+                                                <TextBlock Text="✔️ Centralized Admin Controls" Foreground="{StaticResource TextPrimary}" FontSize="12"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Button x:Name="BtnActivateEnt" Content="Contact Enterprise" Style="{StaticResource AccentBtnStyle}" BorderBrush="{StaticResource AccentGold}" Foreground="{StaticResource AccentGold}" VerticalAlignment="Bottom" Height="38" Click="BtnActivateEnt_Click"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- License Key Input -->
+                            <Border Grid.Row="1" Background="{StaticResource CardBg}" CornerRadius="8" Padding="15" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="🔑 Already Purchased? Activate License:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,15,0"/>
+                                    <TextBox Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtLicenseKey" Text="" ToolTip="Enter Key: PRO-GATEWAY-2026 or ENT-GATEWAY-2026"/>
+                                    <Button Grid.Column="2" Content="Activate Key" Style="{StaticResource AccentBtnStyle}" Margin="12,0,0,0" Click="BtnVerifyLicenseKey_Click"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </TabItem>
                 
-                <!-- TAB 3: SETTINGS -->
+                <!-- TAB 4: SETTINGS -->
                 <TabItem x:Name="TabSettings">
                     <Grid>
                         <Grid.RowDefinitions>
