@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AISecurityGateway"
         mc:Ignorable="d"
-        Title="Zero-Trust AI Security Gateway" Height="680" Width="1050"
+        Title="Zero-Trust AI Security Gateway (V1.2)" Height="680" Width="1050"
         WindowStartupLocation="CenterScreen"
         Background="#14161C">
     
