@@ -20,7 +20,7 @@ class StoragePurger
 
         Console.WriteLine("====================================================");
         // 
-        Console.WriteLine("          SMART STORAGE PURGE ENGINE (V1)           ");
+        Console.WriteLine("          SMART STORAGE PURGE ENGINE (V1.3)         ");
         Console.WriteLine($" 📍 Monitoring Target: {downloadsPath}");
         Console.WriteLine("====================================================\n");
 
