@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Microsoft.Data.Sqlite;
 
 namespace AISecurityGateway
 {
@@ -29,6 +30,21 @@ namespace AISecurityGateway
         private int freeFilesProcessedToday = 0;
         private const int FreeDailyLimit = 5;
 
+        // DB Data Structure
+        public class AuditLogEntry
+        {
+            public int Id { get; set; }
+            public string Timestamp { get; set; } = "";
+            public string SourceFile { get; set; } = "";
+            public string EntityId { get; set; } = "";
+            public double ValueMetric { get; set; }
+            public string Category { get; set; } = "";
+            public string Summary { get; set; } = "";
+            public int RedactedPhones { get; set; }
+            public int RedactedEmails { get; set; }
+            public bool ContainsPrivacyShield { get; set; }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -37,6 +53,148 @@ namespace AISecurityGateway
             RefreshDirectoryQueues();
             LogMessage("[SYSTEM INITIALIZED]: Zero-Trust Gateway ready.");
         }
+
+        #region DATABASE AUDIT PERSISTENCE
+
+        private void InitializeDatabase()
+        {
+            try
+            {
+                string cleanOutput = TxtCleanOutput.Text.Trim();
+                if (!Directory.Exists(cleanOutput)) Directory.CreateDirectory(cleanOutput);
+                
+                string dbPath = Path.Combine(cleanOutput, "audit_logs.db");
+                using (var connection = new SqliteConnection($"Data Source={dbPath}"))
+                {
+                    connection.Open();
+                    string createTableQuery = @"
+                        CREATE TABLE IF NOT EXISTS AuditLogs (
+                            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            Timestamp TEXT,
+                            SourceFile TEXT,
+                            EntityId TEXT,
+                            ValueMetric REAL,
+                            Category TEXT,
+                            Summary TEXT,
+                            RedactedPhones INTEGER,
+                            RedactedEmails INTEGER,
+                            ContainsPrivacyShield INTEGER
+                        );";
+                    using (var command = new SqliteCommand(createTableQuery, connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+                LogMessage("[DATABASE]: SQLite compliance database initialized.");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[DATABASE ERROR]: Failed to initialize database: {ex.Message}");
+            }
+        }
+
+        private void InsertAuditLog(string timestamp, string sourceFile, string entityId, double valueMetric, string category, string summary, int phones, int emails, bool shield)
+        {
+            try
+            {
+                string cleanOutput = TxtCleanOutput.Text.Trim();
+                string dbPath = Path.Combine(cleanOutput, "audit_logs.db");
+                using (var connection = new SqliteConnection($"Data Source={dbPath}"))
+                {
+                    connection.Open();
+                    string insertQuery = @"
+                        INSERT INTO AuditLogs (Timestamp, SourceFile, EntityId, ValueMetric, Category, Summary, RedactedPhones, RedactedEmails, ContainsPrivacyShield)
+                        VALUES ($timestamp, $sourceFile, $entityId, $valueMetric, $category, $summary, $phones, $emails, $shield);";
+                    
+                    using (var command = new SqliteCommand(insertQuery, connection))
+                    {
+                        command.Parameters.AddWithValue("$timestamp", timestamp);
+                        command.Parameters.AddWithValue("$sourceFile", sourceFile);
+                        command.Parameters.AddWithValue("$entityId", string.IsNullOrEmpty(entityId) ? DBNull.Value : entityId);
+                        command.Parameters.AddWithValue("$valueMetric", valueMetric);
+                        command.Parameters.AddWithValue("$category", category);
+                        command.Parameters.AddWithValue("$summary", summary);
+                        command.Parameters.AddWithValue("$phones", phones);
+                        command.Parameters.AddWithValue("$emails", emails);
+                        command.Parameters.AddWithValue("$shield", shield ? 1 : 0);
+                        
+                        command.ExecuteNonQuery();
+                    }
+                }
+                LogMessage($"   🗄️ [DATABASE SUCCESS]: Logged entity '{entityId}' to SQLite compliance history.");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[DATABASE ERROR]: Insert failed: {ex.Message}");
+            }
+        }
+
+        private void RefreshDbGrid()
+        {
+            if (currentTier != SubscriptionTier.Enterprise)
+            {
+                BdrDbLockOverlay.Visibility = Visibility.Visible;
+                TxtDbStatusInfo.Text = " (Enterprise Only - Locked)";
+                TxtDbStatusInfo.Foreground = (System.Windows.Media.Brush)FindResource("TextSecondary");
+                return;
+            }
+
+            BdrDbLockOverlay.Visibility = Visibility.Collapsed;
+            TxtDbStatusInfo.Text = " (Active & Connected)";
+            TxtDbStatusInfo.Foreground = (System.Windows.Media.Brush)FindResource("AccentGold");
+
+            try
+            {
+                string cleanOutput = TxtCleanOutput.Text.Trim();
+                string dbPath = Path.Combine(cleanOutput, "audit_logs.db");
+                if (!File.Exists(dbPath))
+                {
+                    InitializeDatabase();
+                }
+
+                var logList = new System.Collections.Generic.List<AuditLogEntry>();
+                using (var connection = new SqliteConnection($"Data Source={dbPath}"))
+                {
+                    connection.Open();
+                    string selectQuery = "SELECT Id, Timestamp, SourceFile, EntityId, ValueMetric, Category, Summary, RedactedPhones, RedactedEmails, ContainsPrivacyShield FROM AuditLogs ORDER BY Id DESC LIMIT 100;";
+                    using (var command = new SqliteCommand(selectQuery, connection))
+                    {
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                logList.Add(new AuditLogEntry
+                                {
+                                    Id = reader.GetInt32(0),
+                                    Timestamp = reader.GetString(1),
+                                    SourceFile = reader.GetString(2),
+                                    EntityId = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                                    ValueMetric = reader.GetDouble(4),
+                                    Category = reader.GetString(5),
+                                    Summary = reader.GetString(6),
+                                    RedactedPhones = reader.GetInt32(7),
+                                    RedactedEmails = reader.GetInt32(8),
+                                    ContainsPrivacyShield = reader.GetInt32(9) == 1
+                                });
+                            }
+                        }
+                    }
+                }
+                DgdAuditLogs.ItemsSource = logList;
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[DATABASE ERROR]: Load failed: {ex.Message}");
+            }
+        }
+
+        private void BtnRefreshDbGrid_Click(object sender, RoutedEventArgs e)
+        {
+            LogMessage("[DATABASE]: Manual refresh of audit logs requested.");
+            RefreshDbGrid();
+        }
+
+        #endregion
 
         #region CONFIGURATION MANAGEMENT
 
@@ -92,6 +250,13 @@ namespace AISecurityGateway
 
             // Validate License Key on load
             ApplyLicenseKey(settings.LicenseKey, silent: true);
+
+            // Initialize DB
+            if (currentTier == SubscriptionTier.Enterprise)
+            {
+                InitializeDatabase();
+            }
+            RefreshDbGrid();
         }
 
         private void SaveSettings()
@@ -117,6 +282,12 @@ namespace AISecurityGateway
                 
                 SetupWatcher();
                 RefreshDirectoryQueues();
+                
+                if (currentTier == SubscriptionTier.Enterprise)
+                {
+                    InitializeDatabase();
+                }
+                RefreshDbGrid();
             }
             catch (Exception ex)
             {
@@ -180,6 +351,12 @@ namespace AISecurityGateway
                         SetupWatcher();
                     }
                 }
+                
+                if (currentTier == SubscriptionTier.Enterprise)
+                {
+                    InitializeDatabase();
+                }
+                RefreshDbGrid();
             });
         }
 
@@ -417,6 +594,80 @@ namespace AISecurityGateway
                     freeFilesProcessedToday++;
                     LogMessage($"   🛡️ [LICENSE COUNTER]: {freeFilesProcessedToday}/{FreeDailyLimit} files processed today on Free tier.");
                 }
+
+                // Parse the clean output filename
+                // Example: -> [OLLAMA SUCCESS]: Securely saved secure_audited_test_log_1.json
+                var match = Regex.Match(line, @"Securely saved\s+(secure_audited_.+\.json)");
+                if (match.Success)
+                {
+                    string jsonFileName = match.Groups[1].Value;
+                    string cleanFolder = TxtCleanOutput.Text.Trim();
+                    string jsonFilePath = Path.Combine(cleanFolder, jsonFileName);
+                    
+                    // Delay slightly to ensure file writing handles are released
+                    Task.Delay(300).ContinueWith(_ => {
+                        Dispatcher.Invoke(() => ProcessNewCleanJson(jsonFilePath));
+                    });
+                }
+            }
+        }
+
+        private void ProcessNewCleanJson(string jsonFilePath)
+        {
+            try
+            {
+                if (!File.Exists(jsonFilePath)) return;
+
+                string jsonContent = File.ReadAllText(jsonFilePath);
+                using (JsonDocument doc = JsonDocument.Parse(jsonContent))
+                {
+                    JsonElement root = doc.RootElement;
+                    string timestamp = root.GetProperty("normalized_timestamp").GetString() ?? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    string sourceFile = root.GetProperty("source_file").GetString() ?? "unknown";
+                    
+                    string entityId = "";
+                    if (root.TryGetProperty("entity_id", out JsonElement entityProp))
+                    {
+                        entityId = entityProp.GetString() ?? "";
+                    }
+                    
+                    double valueMetric = 0;
+                    if (root.TryGetProperty("value_metric", out JsonElement valueProp))
+                    {
+                        if (valueProp.ValueKind == JsonValueKind.Number)
+                            valueMetric = valueProp.GetDouble();
+                        else if (valueProp.ValueKind == JsonValueKind.String && double.TryParse(valueProp.GetString(), out double val))
+                            valueMetric = val;
+                    }
+
+                    string category = root.GetProperty("category").GetString() ?? "General";
+                    string summary = root.GetProperty("summary").GetString() ?? "";
+                    
+                    int phones = 0;
+                    if (root.TryGetProperty("redacted_phones", out JsonElement phoneProp))
+                    {
+                        phones = phoneProp.GetInt32();
+                    }
+                    
+                    int emails = 0;
+                    if (root.TryGetProperty("redacted_emails", out JsonElement emailProp))
+                    {
+                        emails = emailProp.GetInt32();
+                    }
+
+                    bool shield = root.GetProperty("contains_privacy_shield").GetBoolean();
+
+                    // Insert into SQLite database if Enterprise tier is active
+                    if (currentTier == SubscriptionTier.Enterprise)
+                    {
+                        InsertAuditLog(timestamp, sourceFile, entityId, valueMetric, category, summary, phones, emails, shield);
+                        RefreshDbGrid();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[DATABASE ERROR]: Processing output JSON failed: {ex.Message}");
             }
         }
 

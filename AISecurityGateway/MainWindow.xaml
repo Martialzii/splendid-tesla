@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AISecurityGateway"
         mc:Ignorable="d"
-        Title="Zero-Trust AI Security Gateway (V1.2)" Height="680" Width="1050"
+        Title="Zero-Trust AI Security Gateway (V1.3)" Height="750" Width="1050"
         WindowStartupLocation="CenterScreen"
         Background="#14161C">
     
@@ -214,11 +214,11 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/> <!-- Title -->
                             <RowDefinition Height="Auto"/> <!-- Cards Grid -->
-                            <RowDefinition Height="*"/>    <!-- Main View (Lists + Terminal) -->
+                            <RowDefinition Height="*"/>    <!-- Main View (Lists + Terminal + DB) -->
                         </Grid.RowDefinitions>
                         
                         <!-- Header Title -->
-                        <Grid Grid.Row="0" Margin="0,0,0,20">
+                        <Grid Grid.Row="0" Margin="0,0,0,15">
                             <StackPanel>
                                 <TextBlock Text="Security Pipeline Dashboard" Foreground="{StaticResource TextPrimary}" FontSize="24" FontWeight="Bold"/>
                                 <TextBlock Text="Scrubbing sensitive PII elements and structuring local logs automatically." Foreground="{StaticResource TextSecondary}" FontSize="13" Margin="0,4,0,0"/>
@@ -226,7 +226,7 @@
                         </Grid>
                         
                         <!-- Cards Grid (Row 1) -->
-                        <Grid Grid.Row="1" Margin="0,0,0,20">
+                        <Grid Grid.Row="1" Margin="0,0,0,15">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
@@ -261,15 +261,16 @@
                             </Border>
                         </Grid>
                         
-                        <!-- Lists and Terminal (Row 2) -->
+                        <!-- Lists, Terminal, DB (Row 2) -->
                         <Grid Grid.Row="2">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="1*"/>
-                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="150"/>
+                                <RowDefinition Height="130"/>
+                                <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             
                             <!-- Queue status (Row 0: Dropzone and Clean Outputs) -->
-                            <Grid Grid.Row="0" Margin="0,0,0,15">
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -282,7 +283,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
-                                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6" HorizontalAlignment="Stretch">
                                             <TextBlock Text="📂 Dropzone Input Queue" Foreground="{StaticResource TextPrimary}" FontSize="14" FontWeight="Bold" Width="200"/>
                                             <TextBlock Text="(0 files)" Foreground="{StaticResource TextSecondary}" FontSize="12" VerticalAlignment="Center" x:Name="TxtInputQueueCount"/>
                                         </StackPanel>
@@ -297,7 +298,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
-                                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
                                             <TextBlock Text="✨ Anonymized Outputs" Foreground="{StaticResource TextPrimary}" FontSize="14" FontWeight="Bold" Width="200"/>
                                             <TextBlock Text="(0 files)" Foreground="{StaticResource TextSecondary}" FontSize="12" VerticalAlignment="Center" x:Name="TxtCleanOutputCount"/>
                                         </StackPanel>
@@ -314,8 +315,8 @@
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
                                     
-                                    <Grid Grid.Row="0" Margin="0,0,0,6">
-                                        <TextBlock Grid.Column="0" Text="💬 Pipeline Console Logs" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <Grid Grid.Row="0" Margin="0,0,0,4">
+                                        <TextBlock Text="💬 Pipeline Console Logs" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                             <CheckBox Content="Auto Watcher" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,15,0" x:Name="ChkAutoWatcher" IsChecked="False" Checked="ChkAutoWatcher_Changed" Unchecked="ChkAutoWatcher_Changed"/>
                                             <Button Content="Manual Sweep" Style="{StaticResource AccentBtnStyle}" Click="BtnManualSweep_Click" Padding="10,4" Margin="0,0,10,0"/>
@@ -326,6 +327,71 @@
                                     <TextBox Grid.Row="1" Background="Transparent" Foreground="#00F29B" BorderThickness="0" 
                                              IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
                                              FontFamily="Consolas" FontSize="11" x:Name="TxtConsoleLog"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- SQLite Database Audit History (Row 2) -->
+                            <Border Grid.Row="2" Background="{StaticResource CardBg}" CornerRadius="8" Padding="12" Margin="0,12,0,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🗄️ Enterprise SQLite Compliance Audit Database" Foreground="{StaticResource AccentGold}" FontSize="13" FontWeight="Bold"/>
+                                            <TextBlock Text=" (Enterprise Only - Locked)" Foreground="{StaticResource TextSecondary}" FontSize="11" VerticalAlignment="Center" x:Name="TxtDbStatusInfo"/>
+                                        </StackPanel>
+                                        <Button Content="Refresh DB View" Style="{StaticResource AccentBtnStyle}" HorizontalAlignment="Right" Padding="10,4" Click="BtnRefreshDbGrid_Click"/>
+                                    </Grid>
+                                    
+                                    <!-- SQLite History Grid -->
+                                    <DataGrid Grid.Row="1" x:Name="DgdAuditLogs" AutoGenerateColumns="False" IsReadOnly="True" 
+                                              Background="#0D0E12" Foreground="{StaticResource TextPrimary}" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}"
+                                              RowBackground="#14161C" AlternatingRowBackground="#1E222B" GridLinesVisibility="Horizontal" HeadersVisibility="Column">
+                                        <DataGrid.Resources>
+                                            <Style TargetType="DataGridColumnHeader">
+                                                <Setter Property="Background" Value="#111317"/>
+                                                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Padding" Value="8,5"/>
+                                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDark}"/>
+                                            </Style>
+                                            <Style TargetType="DataGridCell">
+                                                <Setter Property="Padding" Value="8,5"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="DataGridCell">
+                                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                                <ContentPresenter VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </DataGrid.Resources>
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="130"/>
+                                            <DataGridTextColumn Header="Source" Binding="{Binding SourceFile}" Width="100"/>
+                                            <DataGridTextColumn Header="Entity ID" Binding="{Binding EntityId}" Width="90"/>
+                                            <DataGridTextColumn Header="Value" Binding="{Binding ValueMetric}" Width="70"/>
+                                            <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="90"/>
+                                            <DataGridTextColumn Header="Redacted Phones" Binding="{Binding RedactedPhones}" Width="110"/>
+                                            <DataGridTextColumn Header="Redacted Emails" Binding="{Binding RedactedEmails}" Width="110"/>
+                                            <DataGridTextColumn Header="Summary" Binding="{Binding Summary}" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    
+                                    <!-- Lock Overlay if not Enterprise -->
+                                    <Border Grid.Row="1" x:Name="BdrDbLockOverlay" Background="#EA14161C" CornerRadius="4" Visibility="Visible">
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <TextBlock Text="🔒 Persistent SQLite Compliance Audit Log Locked" Foreground="{StaticResource TextSecondary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <TextBlock Text="Enterprise license required to log records permanently and access historical auditing." Foreground="{StaticResource TextSecondary}" FontSize="12" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                                            <Button Content="Activate Enterprise Plan" Style="{StaticResource AccentBtnStyle}" BorderBrush="{StaticResource AccentGold}" Foreground="{StaticResource AccentGold}" Width="185" Click="NavSubscription_Click" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
                                 </Grid>
                             </Border>
                         </Grid>
