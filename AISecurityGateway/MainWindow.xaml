@@ -337,55 +337,160 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0" Margin="0,0,0,6">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="🗄️ Enterprise SQLite Compliance Audit Database" Foreground="{StaticResource AccentGold}" FontSize="13" FontWeight="Bold"/>
-                                            <TextBlock Text=" (Enterprise Only - Locked)" Foreground="{StaticResource TextSecondary}" FontSize="11" VerticalAlignment="Center" x:Name="TxtDbStatusInfo"/>
+                                    
+                                    <!-- DB Top Bar with Search & Filter -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🗄️ Enterprise SQLite Compliance Audit Database" Foreground="{StaticResource AccentGold}" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <TextBlock Text=" (Enterprise Only - Locked)" Foreground="{StaticResource TextSecondary}" FontSize="11" VerticalAlignment="Center" x:Name="TxtDbStatusInfo" Margin="5,0,0,0"/>
                                         </StackPanel>
-                                        <Button Content="Refresh DB View" Style="{StaticResource AccentBtnStyle}" HorizontalAlignment="Right" Padding="10,4" Click="BtnRefreshDbGrid_Click"/>
+                                        
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <!-- Search Field -->
+                                            <TextBlock Text="Search:" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="10,0,5,0" FontSize="11" FontWeight="SemiBold"/>
+                                            <TextBox Width="150" Height="26" Style="{StaticResource ModernTextBoxStyle}" x:Name="TxtDbSearch" TextChanged="TxtDbSearch_TextChanged" VerticalAlignment="Center" Padding="4,2"/>
+                                            
+                                            <!-- Category Filter -->
+                                            <TextBlock Text="Filter:" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="15,0,5,0" FontSize="11" FontWeight="SemiBold"/>
+                                            <ComboBox Width="120" Height="26" x:Name="CmbDbCategoryFilter" SelectionChanged="CmbDbCategoryFilter_SelectionChanged" Background="#1E222B" Foreground="#F7FAFC" BorderBrush="#2E3440" VerticalAlignment="Center">
+                                                <ComboBoxItem Content="All Categories" IsSelected="True"/>
+                                                <ComboBoxItem Content="Financial"/>
+                                                <ComboBoxItem Content="System Error"/>
+                                                <ComboBoxItem Content="General Text"/>
+                                            </ComboBox>
+                                            
+                                            <!-- Refresh -->
+                                            <Button Content="Refresh" Style="{StaticResource AccentBtnStyle}" Margin="12,0,0,0" Padding="8,4" Click="BtnRefreshDbGrid_Click" Height="26" VerticalAlignment="Center"/>
+                                        </StackPanel>
                                     </Grid>
                                     
-                                    <!-- SQLite History Grid -->
-                                    <DataGrid Grid.Row="1" x:Name="DgdAuditLogs" AutoGenerateColumns="False" IsReadOnly="True" 
-                                              Background="#0D0E12" Foreground="{StaticResource TextPrimary}" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}"
-                                              RowBackground="#14161C" AlternatingRowBackground="#1E222B" GridLinesVisibility="Horizontal" HeadersVisibility="Column">
-                                        <DataGrid.Resources>
-                                            <Style TargetType="DataGridColumnHeader">
-                                                <Setter Property="Background" Value="#111317"/>
-                                                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                                <Setter Property="Padding" Value="8,5"/>
-                                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                                <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDark}"/>
-                                            </Style>
-                                            <Style TargetType="DataGridCell">
-                                                <Setter Property="Padding" Value="8,5"/>
-                                                <Setter Property="BorderThickness" Value="0"/>
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="DataGridCell">
-                                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                                                <ContentPresenter VerticalAlignment="Center"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </DataGrid.Resources>
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="130"/>
-                                            <DataGridTextColumn Header="Source" Binding="{Binding SourceFile}" Width="100"/>
-                                            <DataGridTextColumn Header="Entity ID" Binding="{Binding EntityId}" Width="90"/>
-                                            <DataGridTextColumn Header="Value" Binding="{Binding ValueMetric}" Width="70"/>
-                                            <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="90"/>
-                                            <DataGridTextColumn Header="Redacted Phones" Binding="{Binding RedactedPhones}" Width="110"/>
-                                            <DataGridTextColumn Header="Redacted Emails" Binding="{Binding RedactedEmails}" Width="110"/>
-                                            <DataGridTextColumn Header="Summary" Binding="{Binding Summary}" Width="*"/>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
+                                    <!-- Database Content View (DataGrid + Details Panel) -->
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="300"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <!-- DataGrid (Left) -->
+                                        <DataGrid Grid.Column="0" x:Name="DgdAuditLogs" AutoGenerateColumns="False" IsReadOnly="True" 
+                                                  Background="#0D0E12" Foreground="{StaticResource TextPrimary}" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}"
+                                                  RowBackground="#14161C" AlternatingRowBackground="#1E222B" GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                                                  SelectionChanged="DgdAuditLogs_SelectionChanged">
+                                            <DataGrid.Resources>
+                                                <Style TargetType="DataGridColumnHeader">
+                                                    <Setter Property="Background" Value="#111317"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="Padding" Value="8,5"/>
+                                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDark}"/>
+                                                </Style>
+                                                <Style TargetType="DataGridCell">
+                                                    <Setter Property="Padding" Value="8,5"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="DataGridCell">
+                                                                <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </DataGrid.Resources>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="125"/>
+                                                <DataGridTextColumn Header="Source File" Binding="{Binding SourceFile}" Width="100"/>
+                                                <DataGridTextColumn Header="Entity ID" Binding="{Binding EntityId}" Width="80"/>
+                                                <DataGridTextColumn Header="Value" Binding="{Binding ValueMetric, StringFormat={}{0:N2}}" Width="65"/>
+                                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="85"/>
+                                                <DataGridTextColumn Header="Phones" Binding="{Binding RedactedPhones}" Width="60"/>
+                                                <DataGridTextColumn Header="Emails" Binding="{Binding RedactedEmails}" Width="60"/>
+                                                <DataGridTextColumn Header="Masked Summary" Binding="{Binding Summary}" Width="*"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                        
+                                        <!-- Details Sidebar (Right) -->
+                                        <Border Grid.Column="1" Background="#0D0E12" CornerRadius="6" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" Margin="12,0,0,0" Padding="12">
+                                            <Grid>
+                                                <!-- Placeholder (When no row selected) -->
+                                                <Border x:Name="BdrDetailPlaceholder" Visibility="Visible" Background="Transparent">
+                                                    <TextBlock Text="🔍 Select a log entry to view full compliance details." Foreground="{StaticResource TextSecondary}" FontSize="12" FontStyle="Italic" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                                                </Border>
+                                                
+                                                <!-- Audit Details Panel -->
+                                                <Grid x:Name="GridAuditDetails" Visibility="Collapsed">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="*"/>
+                                                    </Grid.RowDefinitions>
+                                                    
+                                                    <TextBlock Grid.Row="0" Text="📋 COMPLIANCE INSPECTION" Foreground="{StaticResource AccentGold}" FontSize="11" FontWeight="Bold" Margin="0,0,0,10"/>
+                                                    
+                                                    <!-- Metadata Grid -->
+                                                    <Grid Grid.Row="1" Margin="0,0,0,10">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="100"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="24"/>
+                                                            <RowDefinition Height="24"/>
+                                                            <RowDefinition Height="24"/>
+                                                            <RowDefinition Height="24"/>
+                                                            <RowDefinition Height="24"/>
+                                                            <RowDefinition Height="24"/>
+                                                        </Grid.RowDefinitions>
+                                                        
+                                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Entity ID:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="TxtDetEntityId" Foreground="{StaticResource TextPrimary}" FontSize="11" FontWeight="Bold"/>
+
+                                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Timestamp:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TxtDetTimestamp" Foreground="{StaticResource TextPrimary}" FontSize="11"/>
+
+                                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="File Source:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TxtDetSourceFile" Foreground="{StaticResource TextPrimary}" FontSize="11" TextTrimming="CharacterEllipsis"/>
+
+                                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Category:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TxtDetCategory" Foreground="{StaticResource TextPrimary}" FontSize="11"/>
+
+                                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Value Metric:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="TxtDetValue" Foreground="{StaticResource TextPrimary}" FontSize="11"/>
+
+                                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="PII Redacted:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                                        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <TextBlock x:Name="TxtDetPhones" Foreground="{StaticResource AccentCyan}" FontSize="11" FontWeight="Bold" Margin="0,0,4,0"/>
+                                                            <TextBlock Text="Phones / " Foreground="{StaticResource TextSecondary}" FontSize="10" Margin="0,0,8,0"/>
+                                                            <TextBlock x:Name="TxtDetEmails" Foreground="{StaticResource AccentCyan}" FontSize="11" FontWeight="Bold" Margin="0,0,4,0"/>
+                                                            <TextBlock Text="Emails" Foreground="{StaticResource TextSecondary}" FontSize="10"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    
+                                                    <!-- Masked Log Text -->
+                                                    <Grid Grid.Row="2">
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="*"/>
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Grid.Row="0" Text="Masked Log Summary:" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold" Margin="0,5,0,5"/>
+                                                        <TextBox Grid.Row="1" Background="{StaticResource TerminalBg}" Foreground="{StaticResource AccentMint}" BorderBrush="{StaticResource BorderBrushDark}"
+                                                                 IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                                                 FontFamily="Consolas" FontSize="11" x:Name="TxtDetSummary" Padding="6"/>
+                                                    </Grid>
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
                                     
-                                    <!-- Lock Overlay if not Enterprise -->
-                                    <Border Grid.Row="1" x:Name="BdrDbLockOverlay" Background="#EA14161C" CornerRadius="4" Visibility="Visible">
+                                    <!-- Lock Overlay if not Enterprise (covers Grid Column 0 and 1) -->
+                                    <Border Grid.Row="1" Grid.ColumnSpan="2" x:Name="BdrDbLockOverlay" Background="#EA14161C" CornerRadius="4" Visibility="Visible">
                                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                                             <TextBlock Text="🔒 Persistent SQLite Compliance Audit Log Locked" Foreground="{StaticResource TextSecondary}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                             <TextBlock Text="Enterprise license required to log records permanently and access historical auditing." Foreground="{StaticResource TextSecondary}" FontSize="12" HorizontalAlignment="Center" Margin="0,0,0,15"/>

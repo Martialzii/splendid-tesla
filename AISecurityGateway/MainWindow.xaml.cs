@@ -152,13 +152,44 @@ namespace AISecurityGateway
                     InitializeDatabase();
                 }
 
+                // Get search and filter criteria
+                string searchText = TxtDbSearch != null ? TxtDbSearch.Text.Trim() : "";
+                string selectedCategory = "";
+                if (CmbDbCategoryFilter != null && CmbDbCategoryFilter.SelectedItem is ComboBoxItem item)
+                {
+                    selectedCategory = item.Content.ToString() ?? "All Categories";
+                }
+
                 var logList = new System.Collections.Generic.List<AuditLogEntry>();
                 using (var connection = new SqliteConnection($"Data Source={dbPath}"))
                 {
                     connection.Open();
-                    string selectQuery = "SELECT Id, Timestamp, SourceFile, EntityId, ValueMetric, Category, Summary, RedactedPhones, RedactedEmails, ContainsPrivacyShield FROM AuditLogs ORDER BY Id DESC LIMIT 100;";
+                    
+                    // Build dynamic SQL
+                    string selectQuery = "SELECT Id, Timestamp, SourceFile, EntityId, ValueMetric, Category, Summary, RedactedPhones, RedactedEmails, ContainsPrivacyShield FROM AuditLogs WHERE 1=1";
+                    
+                    if (!string.IsNullOrEmpty(searchText))
+                    {
+                        selectQuery += " AND (EntityId LIKE $search OR Summary LIKE $search OR SourceFile LIKE $search)";
+                    }
+                    if (!string.IsNullOrEmpty(selectedCategory) && selectedCategory != "All Categories")
+                    {
+                        selectQuery += " AND Category = $category";
+                    }
+                    
+                    selectQuery += " ORDER BY Id DESC LIMIT 100;";
+
                     using (var command = new SqliteCommand(selectQuery, connection))
                     {
+                        if (!string.IsNullOrEmpty(searchText))
+                        {
+                            command.Parameters.AddWithValue("$search", $"%{searchText}%");
+                        }
+                        if (!string.IsNullOrEmpty(selectedCategory) && selectedCategory != "All Categories")
+                        {
+                            command.Parameters.AddWithValue("$category", selectedCategory);
+                        }
+
                         using (var reader = command.ExecuteReader())
                         {
                             while (reader.Read())
@@ -181,6 +212,7 @@ namespace AISecurityGateway
                     }
                 }
                 DgdAuditLogs.ItemsSource = logList;
+                UpdateDetailsPanel(null); // Reset detail panel on reload
             }
             catch (Exception ex)
             {
@@ -192,6 +224,51 @@ namespace AISecurityGateway
         {
             LogMessage("[DATABASE]: Manual refresh of audit logs requested.");
             RefreshDbGrid();
+        }
+
+        private void TxtDbSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            RefreshDbGrid();
+        }
+
+        private void CmbDbCategoryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            RefreshDbGrid();
+        }
+
+        private void DgdAuditLogs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DgdAuditLogs.SelectedItem is AuditLogEntry selectedEntry)
+            {
+                UpdateDetailsPanel(selectedEntry);
+            }
+            else
+            {
+                UpdateDetailsPanel(null);
+            }
+        }
+
+        private void UpdateDetailsPanel(AuditLogEntry? entry)
+        {
+            if (entry == null)
+            {
+                if (BdrDetailPlaceholder != null) BdrDetailPlaceholder.Visibility = Visibility.Visible;
+                if (GridAuditDetails != null) GridAuditDetails.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                if (BdrDetailPlaceholder != null) BdrDetailPlaceholder.Visibility = Visibility.Collapsed;
+                if (GridAuditDetails != null) GridAuditDetails.Visibility = Visibility.Visible;
+                
+                if (TxtDetEntityId != null) TxtDetEntityId.Text = string.IsNullOrEmpty(entry.EntityId) ? "N/A" : entry.EntityId;
+                if (TxtDetTimestamp != null) TxtDetTimestamp.Text = entry.Timestamp;
+                if (TxtDetSourceFile != null) TxtDetSourceFile.Text = entry.SourceFile;
+                if (TxtDetCategory != null) TxtDetCategory.Text = entry.Category;
+                if (TxtDetValue != null) TxtDetValue.Text = entry.ValueMetric > 0 ? entry.ValueMetric.ToString("C") : "$0.00";
+                if (TxtDetPhones != null) TxtDetPhones.Text = entry.RedactedPhones.ToString();
+                if (TxtDetEmails != null) TxtDetEmails.Text = entry.RedactedEmails.ToString();
+                if (TxtDetSummary != null) TxtDetSummary.Text = entry.Summary;
+            }
         }
 
         #endregion
