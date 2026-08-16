@@ -563,12 +563,16 @@ namespace AISecurityGateway
             string python = "";
             string script = "";
             string dropzone = "";
+            string cleanOutput = "";
+            string modelName = "";
 
             Dispatcher.Invoke(() =>
             {
                 python = TxtPythonPath.Text.Trim();
                 script = TxtScriptPath.Text.Trim();
                 dropzone = TxtInputDropzone.Text.Trim();
+                cleanOutput = TxtCleanOutput.Text.Trim();
+                modelName = (CmbOllamaModel.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "llama3.2:3b";
                 LogMessage("[PIPELINE START]: Initiating data standardization scan...");
             });
 
@@ -582,6 +586,7 @@ namespace AISecurityGateway
             try
             {
                 if (!Directory.Exists(dropzone)) Directory.CreateDirectory(dropzone);
+                if (!Directory.Exists(cleanOutput)) Directory.CreateDirectory(cleanOutput);
             }
             catch (Exception ex)
             {
@@ -592,7 +597,7 @@ namespace AISecurityGateway
             ProcessStartInfo start = new ProcessStartInfo
             {
                 FileName = python,
-                Arguments = $"\"{script}\"",
+                Arguments = $"\"{script}\" --model \"{modelName}\" --input \"{dropzone}\" --output \"{cleanOutput}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

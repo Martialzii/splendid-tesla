@@ -1,16 +1,17 @@
 import os
 import json
 import re
+import argparse
 from pathlib import Path
 from datetime import datetime
 import ollama
 
-# Match your existing OneDrive paths
-BASE_WORKSPACE = Path("C:/Users/Cyrus/OneDrive/Desktop/DataPipeline")
-INPUT_DROPZONE = BASE_WORKSPACE / "Input_Dropzone"
-OUTPUT_CLEAN = BASE_WORKSPACE / "Clean_Output"
-
-MODEL_NAME = "llama3.2:3b"
+def parse_args():
+    parser = argparse.ArgumentParser(description="Zero-Trust AI Security Gateway & Data Standardizer Pipeline")
+    parser.add_argument("--model", default="llama3.2:3b", help="Local AI Model name to use in Ollama")
+    parser.add_argument("--input", default="C:/Users/Cyrus/OneDrive/Desktop/DataPipeline/Input_Dropzone", help="Path to Input Dropzone folder")
+    parser.add_argument("--output", default="C:/Users/Cyrus/OneDrive/Desktop/DataPipeline/Clean_Output", help="Path to Clean Output folder")
+    return parser.parse_args()
 
 def privacy_scrubber(text):
     """
@@ -30,14 +31,17 @@ def privacy_scrubber(text):
     
     return text, phone_matches, email_matches
 
-def ai_secure_pipeline():
+def ai_secure_pipeline(args):
     timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    model_name = args.model
+    input_dropzone = Path(args.input)
+    output_clean = Path(args.output)
     
-    if not INPUT_DROPZONE.exists():
-        print(f"   -> [PRIVACY ERROR]: Input Dropzone does not exist at {INPUT_DROPZONE}")
+    if not input_dropzone.exists():
+        print(f"   -> [PRIVACY ERROR]: Input Dropzone does not exist at {input_dropzone}")
         return
 
-    raw_files = [f for f in INPUT_DROPZONE.iterdir() if f.is_file()]
+    raw_files = [f for f in input_dropzone.iterdir() if f.is_file()]
     if not raw_files:
         print("   -> [PRIVACY GATEWAY]: Dropzone empty. No raw files to process.")
         return
@@ -68,7 +72,7 @@ def ai_secure_pipeline():
             )
 
             response = ollama.generate(
-                model=MODEL_NAME,
+                model=model_name,
                 prompt=f"Standardize this secure content: {safe_content}",
                 system=system_prompt,
                 options={"temperature": 0.0},
@@ -86,13 +90,12 @@ def ai_secure_pipeline():
             parsed_data["normalized_timestamp"] = timestamp_str
             parsed_data["source_file"] = file_path.name
             parsed_data["contains_privacy_shield"] = True
-            # Store count stats in metadata as well
             parsed_data["redacted_phones"] = phone_redactions
             parsed_data["redacted_emails"] = email_redactions
 
             # Save clean, anonymous JSON records
-            OUTPUT_CLEAN.mkdir(parents=True, exist_ok=True)
-            output_file = OUTPUT_CLEAN / f"secure_audited_{file_path.stem}.json"
+            output_clean.mkdir(parents=True, exist_ok=True)
+            output_file = output_clean / f"secure_audited_{file_path.stem}.json"
             with open(output_file, "w", encoding="utf-8") as out_f:
                 json.dump(parsed_data, out_f, indent=4)
 
@@ -103,4 +106,5 @@ def ai_secure_pipeline():
             print(f"   -> [PRIVACY ERROR]: Failed processing {file_path.name}: {e}")
 
 if __name__ == "__main__":
-    ai_secure_pipeline()
+    args = parse_args()
+    ai_secure_pipeline(args)
