@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AISecurityGateway"
         mc:Ignorable="d"
-        Title="Zero-Trust AI Security Gateway (V1.3)" Height="750" Width="1050"
+        Title="Zero-Trust AI Security Gateway (V1.4)" Height="750" Width="1050"
         WindowStartupLocation="CenterScreen"
         Background="#14161C">
     
@@ -793,6 +793,8 @@
                                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Ollama Model Name:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
                                         <ComboBox Grid.Row="4" Grid.Column="1" x:Name="CmbOllamaModel" Background="#1E222B" Foreground="#F7FAFC" BorderBrush="#2E3440" Height="32">
                                             <ComboBoxItem Content="llama3.2:3b" IsSelected="True"/>
+                                            <ComboBoxItem Content="deepseek-r1:1.5b"/>
+                                            <ComboBoxItem Content="deepseek-r1:8b"/>
                                             <ComboBoxItem Content="gemma:2b"/>
                                             <ComboBoxItem Content="llama3:latest"/>
                                         </ComboBox>

@@ -81,6 +81,12 @@ def ai_secure_pipeline(args):
 
             ai_output = response['response'].strip()
 
+            # Clean reasoning think blocks if using DeepSeek-R1 reasoning models
+            if "<think>" in ai_output:
+                think_end = ai_output.find("</think>")
+                if think_end != -1:
+                    ai_output = ai_output[think_end + 8:].strip()
+
             if ai_output.startswith("```json"):
                 ai_output = ai_output.split("```json")[1].split("```")[0].strip()
             elif ai_output.startswith("```"):
