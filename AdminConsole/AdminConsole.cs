@@ -83,28 +83,40 @@ class AdminConsole
 
     static void RunPythonEngine()
     {
+        string repoScript = @"C:\Users\Cyrus\Documents\antigravity\splendid-tesla\data_standardizer.py";
+        string desktopScript = @"C:\Users\Cyrus\OneDrive\Desktop\data_standardizer.py";
+        string selectedScript = File.Exists(repoScript) ? repoScript : desktopScript;
+
+        if (!File.Exists(selectedScript))
+        {
+            Console.WriteLine("   ⚠️ [ERROR]: Standardizer script not found in repository or OneDrive desktop.");
+            return;
+        }
+
         ProcessStartInfo start = new ProcessStartInfo();
         start.FileName = "python"; 
-        // Points exactly to your script sitting on your OneDrive desktop
-        start.Arguments = @"C:\Users\Cyrus\OneDrive\Desktop\data_standardizer.py";
+        start.Arguments = $"\"{selectedScript}\" --model \"llama3.2:3b\"";
         start.UseShellExecute = false;
         start.RedirectStandardOutput = true;
         start.CreateNoWindow = true;
 
         try
         {
-            using (Process process = Process.Start(start))
+            using (Process? process = Process.Start(start))
             {
-                using (StreamReader reader = process.StandardOutput)
+                if (process != null)
                 {
-                    string result = reader.ReadToEnd();
-                    Console.WriteLine(result.Trim() == "" ? "   -> Subsystem ran silently." : result);
+                    using (StreamReader reader = process.StandardOutput)
+                    {
+                        string result = reader.ReadToEnd();
+                        Console.WriteLine(string.IsNullOrWhiteSpace(result) ? "   -> Subsystem ran silently." : result);
+                    }
                 }
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Console.WriteLine("   ⚠️ Python runner was unable to execute automatically.");
+            Console.WriteLine($"   ⚠️ Python runner was unable to execute: {ex.Message}");
         }
     }
 }

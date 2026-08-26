@@ -32,6 +32,7 @@ def privacy_scrubber(text):
     return text, phone_matches, email_matches
 
 def ai_secure_pipeline(args):
+    print(f"🛡️ [PIPELINE START (V1.4.0)]: Initiating data standardization scan...")
     timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     model_name = args.model
     input_dropzone = Path(args.input)
