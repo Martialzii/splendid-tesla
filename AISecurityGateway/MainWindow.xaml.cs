@@ -78,14 +78,26 @@ namespace AISecurityGateway
                             Summary TEXT,
                             RedactedPhones INTEGER,
                             RedactedEmails INTEGER,
-                            ContainsPrivacyShield INTEGER
+                            ContainsPrivacyShield INTEGER,
+                            RiskScore REAL DEFAULT 0.0,
+                            ThreatLevel TEXT DEFAULT 'LOW'
                         );";
                     using (var command = new SqliteCommand(createTableQuery, connection))
                     {
                         command.ExecuteNonQuery();
                     }
+
+                    // Migration checks for new V1.5.0 columns
+                    try
+                    {
+                        using (var alter1 = new SqliteCommand("ALTER TABLE AuditLogs ADD COLUMN RiskScore REAL DEFAULT 0.0;", connection)) alter1.ExecuteNonQuery();
+                    } catch { }
+                    try
+                    {
+                        using (var alter2 = new SqliteCommand("ALTER TABLE AuditLogs ADD COLUMN ThreatLevel TEXT DEFAULT 'LOW';", connection)) alter2.ExecuteNonQuery();
+                    } catch { }
                 }
-                LogMessage("[DATABASE]: SQLite compliance database initialized.");
+                LogMessage("[DATABASE]: SQLite compliance database initialized (V1.5.0 Schema).");
             }
             catch (Exception ex)
             {
@@ -93,7 +105,7 @@ namespace AISecurityGateway
             }
         }
 
-        private void InsertAuditLog(string timestamp, string sourceFile, string entityId, double valueMetric, string category, string summary, int phones, int emails, bool shield)
+        private void InsertAuditLog(string timestamp, string sourceFile, string entityId, double valueMetric, string category, string summary, int phones, int emails, bool shield, double riskScore = 0.0, string threatLevel = "LOW")
         {
             try
             {
@@ -103,8 +115,8 @@ namespace AISecurityGateway
                 {
                     connection.Open();
                     string insertQuery = @"
-                        INSERT INTO AuditLogs (Timestamp, SourceFile, EntityId, ValueMetric, Category, Summary, RedactedPhones, RedactedEmails, ContainsPrivacyShield)
-                        VALUES ($timestamp, $sourceFile, $entityId, $valueMetric, $category, $summary, $phones, $emails, $shield);";
+                        INSERT INTO AuditLogs (Timestamp, SourceFile, EntityId, ValueMetric, Category, Summary, RedactedPhones, RedactedEmails, ContainsPrivacyShield, RiskScore, ThreatLevel)
+                        VALUES ($timestamp, $sourceFile, $entityId, $valueMetric, $category, $summary, $phones, $emails, $shield, $riskScore, $threatLevel);";
                     
                     using (var command = new SqliteCommand(insertQuery, connection))
                     {
@@ -117,11 +129,13 @@ namespace AISecurityGateway
                         command.Parameters.AddWithValue("$phones", phones);
                         command.Parameters.AddWithValue("$emails", emails);
                         command.Parameters.AddWithValue("$shield", shield ? 1 : 0);
+                        command.Parameters.AddWithValue("$riskScore", riskScore);
+                        command.Parameters.AddWithValue("$threatLevel", threatLevel);
                         
                         command.ExecuteNonQuery();
                     }
                 }
-                LogMessage($"   🗄️ [DATABASE SUCCESS]: Logged entity '{entityId}' to SQLite compliance history.");
+                LogMessage($"   🗄️ [DATABASE SUCCESS]: Logged entity '{entityId}' (Risk: {riskScore:F1}, Threat: {threatLevel}) to SQLite compliance history.");
             }
             catch (Exception ex)
             {
@@ -565,6 +579,7 @@ namespace AISecurityGateway
             string dropzone = "";
             string cleanOutput = "";
             string modelName = "";
+            bool isDeep = false;
 
             Dispatcher.Invoke(() =>
             {
@@ -573,7 +588,8 @@ namespace AISecurityGateway
                 dropzone = TxtInputDropzone.Text.Trim();
                 cleanOutput = TxtCleanOutput.Text.Trim();
                 modelName = (CmbOllamaModel.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "llama3.2:3b";
-                LogMessage("[PIPELINE START]: Initiating data standardization scan...");
+                isDeep = ChkDeepInspection.IsChecked == true;
+                LogMessage($"[PIPELINE START (V1.5.0{(isDeep ? " DEEP" : "")})]: Initiating data standardization scan...");
             });
 
             if (!File.Exists(script))
@@ -594,10 +610,11 @@ namespace AISecurityGateway
                 return;
             }
 
+            string deepFlag = isDeep ? " --deep" : "";
             ProcessStartInfo start = new ProcessStartInfo
             {
                 FileName = python,
-                Arguments = $"\"{script}\" --model \"{modelName}\" --input \"{dropzone}\" --output \"{cleanOutput}\"",
+                Arguments = $"\"{script}\" --model \"{modelName}\" --input \"{dropzone}\" --output \"{cleanOutput}\"{deepFlag}",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -654,16 +671,27 @@ namespace AISecurityGateway
             // Parse metrics out of standardizer stdout
             if (line.Contains("[PII_REDACTED_STATS]"))
             {
-                // Format: [PII_REDACTED_STATS]: file.txt - Phones: X, Emails: Y
-                var match = Regex.Match(line, @"Phones:\s*(\d+),\s*Emails:\s*(\d+)");
+                var match = Regex.Match(line, @"Phones:\s*(\d+),\s*Emails:\s*(\d+)(?:,\s*Keys:\s*(\d+),\s*IPs:\s*(\d+),\s*Cards:\s*(\d+),\s*IDs:\s*(\d+))?");
                 if (match.Success)
                 {
                     int phones = int.Parse(match.Groups[1].Value);
                     int emails = int.Parse(match.Groups[2].Value);
-                    redactedPiiCount += (phones + emails);
+                    int keys = match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0;
+                    int ips = match.Groups[4].Success ? int.Parse(match.Groups[4].Value) : 0;
+                    int cards = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 0;
+                    int ids = match.Groups[6].Success ? int.Parse(match.Groups[6].Value) : 0;
+                    int total = phones + emails + keys + ips + cards + ids;
+                    
+                    redactedPiiCount += total;
                     TxtRedactedCount.Text = redactedPiiCount.ToString();
-                    LogMessage($"   🛡️ [METRIC SHIELD]: Redacted {phones} phone(s) and {emails} email(s) from log.");
+                    LogMessage($"   🛡️ [METRIC SHIELD]: Redacted {total} asset(s) (Phones: {phones}, Emails: {emails}, Keys: {keys}, IPs: {ips}, Cards: {cards}, IDs: {ids})");
                 }
+            }
+            else if (line.Contains("[DEEP_ANALYSIS_STATS]"))
+            {
+                int fileIdx = line.IndexOf("file=");
+                string statsStr = fileIdx >= 0 ? line.Substring(fileIdx) : line;
+                LogMessage($"   ⚡ [DEEP TELEMETRY]: {statsStr}");
             }
             else if (line.Contains("[OLLAMA SUCCESS]"))
             {
@@ -739,10 +767,23 @@ namespace AISecurityGateway
 
                     bool shield = root.GetProperty("contains_privacy_shield").GetBoolean();
 
+                    double riskScore = 0.0;
+                    if (root.TryGetProperty("risk_score", out JsonElement riskProp))
+                    {
+                        if (riskProp.ValueKind == JsonValueKind.Number) riskScore = riskProp.GetDouble();
+                        else if (riskProp.ValueKind == JsonValueKind.String && double.TryParse(riskProp.GetString(), out double rVal)) riskScore = rVal;
+                    }
+
+                    string threatLevel = "LOW";
+                    if (root.TryGetProperty("threat_level", out JsonElement threatProp))
+                    {
+                        threatLevel = threatProp.GetString() ?? "LOW";
+                    }
+
                     // Insert into SQLite database if Enterprise tier is active
                     if (currentTier == SubscriptionTier.Enterprise)
                     {
-                        InsertAuditLog(timestamp, sourceFile, entityId, valueMetric, category, summary, phones, emails, shield);
+                        InsertAuditLog(timestamp, sourceFile, entityId, valueMetric, category, summary, phones, emails, shield, riskScore, threatLevel);
                         RefreshDbGrid();
                     }
                 }

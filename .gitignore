@@ -21,3 +21,7 @@ __pycache__/
 
 # Log files
 *.log
+
+# Data Dropzones
+Input_Dropzone/
+Clean_Output/

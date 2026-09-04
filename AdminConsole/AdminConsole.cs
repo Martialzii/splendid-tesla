@@ -24,7 +24,7 @@ class AdminConsole
         }
 
         Console.WriteLine("====================================================");
-        Console.WriteLine("     UNIFIED SYSTEM ADMINISTRATOR CONSOLE (V1.4)    ");
+        Console.WriteLine(" UNIFIED SYSTEM ADMINISTRATOR CONSOLE (V1.5.0 DEEP) ");
         Console.WriteLine($" 📍 Base Workspace: {baseWorkspace}");
         Console.WriteLine("====================================================\n");
 
