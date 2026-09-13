@@ -29,7 +29,7 @@ def calculate_shannon_entropy(text):
     return entropy
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Zero-Trust AI Security Gateway & Data Standardizer Pipeline (V1.6.0 Deep Neural Edition)")
+    parser = argparse.ArgumentParser(description="Zero-Trust AI Security Gateway & Data Standardizer Pipeline (V2.0.0 Enterprise Neural Platform)")
     parser.add_argument("--model", default="llama3.2:3b", help="Local AI Model name to use in Ollama (e.g. llama3.2:3b, deepseek-r1:14b, deepseek-r1:32b)")
     parser.add_argument("--input", default="C:/Users/Cyrus/OneDrive/Desktop/DataPipeline/Input_Dropzone", help="Path to Input Dropzone folder")
     parser.add_argument("--output", default="C:/Users/Cyrus/OneDrive/Desktop/DataPipeline/Clean_Output", help="Path to Clean Output folder")
@@ -38,7 +38,7 @@ def parse_args():
 
 def privacy_scrubber(text):
     """
-    V1.6.0 Deep Neural Redactor: Scrubs multi-layered sensitive PII, credentials, high-entropy secrets,
+    V2.0.0 Enterprise Neural Redactor: Scrubs multi-layered sensitive PII, credentials, high-entropy secrets,
     RSA keys, DB connection strings, IP addresses, financial markers, and government IDs.
     Returns: (scrubbed_text, redaction_counts_dict)
     """
@@ -132,7 +132,7 @@ def map_regulatory_frameworks(redactions):
 
 def ai_secure_pipeline(args):
     deep_mode_str = " (DEEP NEURAL ACTIVE)" if args.deep else ""
-    print(f"🛡️ [PIPELINE START (V1.6.0{deep_mode_str})]: Initiating data standardization scan...")
+    print(f"🛡️ [PIPELINE START (V2.0.0 ENTERPRISE PLATFORM{deep_mode_str})]: Initiating neural data scan...")
     timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     model_name = args.model
     input_dropzone = Path(args.input)

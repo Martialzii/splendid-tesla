@@ -55,7 +55,7 @@ namespace AISecurityGateway
             LoadSettings();
             SetupWatcher();
             RefreshDirectoryQueues();
-            LogMessage("[SYSTEM INITIALIZED]: Zero-Trust Gateway ready.");
+            LogMessage("[SYSTEM INITIALIZED]: Zero-Trust AI Security Platform V2.0.0 Enterprise ready.");
         }
 
         #region DATABASE AUDIT PERSISTENCE
@@ -680,7 +680,7 @@ namespace AISecurityGateway
                 cleanOutput = TxtCleanOutput.Text.Trim();
                 modelName = (CmbOllamaModel.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "llama3.2:3b";
                 isDeep = ChkDeepInspection.IsChecked == true;
-                LogMessage($"[PIPELINE START (V1.5.0{(isDeep ? " DEEP" : "")})]: Initiating data standardization scan...");
+                LogMessage($"[PIPELINE START (V2.0.0 ENTERPRISE{(isDeep ? " DEEP NEURAL" : "")})]: Initiating neural data scan...");
             });
 
             if (!File.Exists(script))

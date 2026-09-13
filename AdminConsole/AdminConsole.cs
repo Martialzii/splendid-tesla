@@ -24,7 +24,7 @@ class AdminConsole
         }
 
         Console.WriteLine("====================================================");
-        Console.WriteLine(" UNIFIED SYSTEM ADMIN CONSOLE (V1.6.0 DEEP NEURAL)  ");
+        Console.WriteLine(" UNIFIED ENTERPRISE ADMIN CONSOLE (V2.0.0 PLATFORM) ");
         Console.WriteLine($" 📍 Base Workspace: {baseWorkspace}");
         Console.WriteLine("====================================================\n");
 
