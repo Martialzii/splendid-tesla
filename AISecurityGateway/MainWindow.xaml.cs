@@ -47,6 +47,14 @@ namespace AISecurityGateway
             public string ThreatLevel { get; set; } = "LOW";
         }
 
+        public class QuarantineItem
+        {
+            public string Filename { get; set; } = "";
+            public string LastModified { get; set; } = "";
+            public double SizeKb { get; set; }
+            public string FullPath { get; set; } = "";
+        }
+
         private int quarantineCount = 0;
 
         public MainWindow()
@@ -1119,9 +1127,98 @@ namespace AISecurityGateway
         }
 
         private void NavDashboard_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 0;
+        private void NavQuarantine_Click(object sender, RoutedEventArgs e)
+        {
+            MainTabControl.SelectedIndex = 4;
+            RefreshQuarantineGrid();
+        }
         private void NavStorage_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 1;
         private void NavSubscription_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 2;
         private void NavSettings_Click(object sender, RoutedEventArgs e) => MainTabControl.SelectedIndex = 3;
+
+        private void RefreshQuarantineGrid()
+        {
+            try
+            {
+                string dropzone = TxtInputDropzone.Text.Trim();
+                string vaultPath = Path.Combine(dropzone, "Quarantine");
+                if (!Directory.Exists(vaultPath)) Directory.CreateDirectory(vaultPath);
+
+                var files = Directory.GetFiles(vaultPath).Select(f => new FileInfo(f)).Select(fi => new QuarantineItem
+                {
+                    Filename = fi.Name,
+                    LastModified = fi.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    SizeKb = fi.Length / 1024.0,
+                    FullPath = fi.FullName
+                }).ToList();
+
+                DgdQuarantineVault.ItemsSource = files;
+                quarantineCount = files.Count;
+                TxtQuarantineCount.Text = quarantineCount.ToString();
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[VAULT ERROR]: Failed to refresh Quarantine vault: {ex.Message}");
+            }
+        }
+
+        private void BtnRefreshQuarantine_Click(object sender, RoutedEventArgs e) => RefreshQuarantineGrid();
+
+        private void BtnRestoreQuarantine_Click(object sender, RoutedEventArgs e)
+        {
+            if (DgdQuarantineVault.SelectedItem is QuarantineItem selected)
+            {
+                try
+                {
+                    string dropzone = TxtInputDropzone.Text.Trim();
+                    string destPath = Path.Combine(dropzone, selected.Filename.Replace("quarantined_", "restored_"));
+                    File.Move(selected.FullPath, destPath);
+                    LogMessage($"   📥 [VAULT RESTORE]: Restored '{selected.Filename}' to dropzone.");
+                    RefreshQuarantineGrid();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to restore payload: {ex.Message}", "Vault Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void BtnDeleteQuarantine_Click(object sender, RoutedEventArgs e)
+        {
+            if (DgdQuarantineVault.SelectedItem is QuarantineItem selected)
+            {
+                try
+                {
+                    File.Delete(selected.FullPath);
+                    LogMessage($"   🗑️ [VAULT DELETE]: Deleted '{selected.Filename}'.");
+                    RefreshQuarantineGrid();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to delete payload: {ex.Message}", "Vault Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void BtnPurgeVault_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string dropzone = TxtInputDropzone.Text.Trim();
+                string vaultPath = Path.Combine(dropzone, "Quarantine");
+                if (Directory.Exists(vaultPath))
+                {
+                    var files = Directory.GetFiles(vaultPath);
+                    foreach (var f in files) File.Delete(f);
+                    LogMessage($"   🔥 [VAULT PURGED]: Cleared out {files.Length} quarantined threat payload(s).");
+                    RefreshQuarantineGrid();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to purge vault: {ex.Message}", "Vault Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private void BtnClearLogs_Click(object sender, RoutedEventArgs e) => TxtConsoleLog.Clear();
 

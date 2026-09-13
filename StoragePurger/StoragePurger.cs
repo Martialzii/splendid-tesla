@@ -19,7 +19,7 @@ class StoragePurger
         if (!Directory.Exists(archivePath)) Directory.CreateDirectory(archivePath);
 
         Console.WriteLine("====================================================");
-        Console.WriteLine("        SMART STORAGE PURGE ENGINE (V2.0.0 PLATFORM) ");
+        Console.WriteLine("        SMART STORAGE PURGE ENGINE (V2.1.0 SOC)      ");
         Console.WriteLine($" 📍 Monitoring Target: {downloadsPath}");
         Console.WriteLine("====================================================\n");
 

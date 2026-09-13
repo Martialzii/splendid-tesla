@@ -24,7 +24,7 @@ class AdminConsole
         }
 
         Console.WriteLine("====================================================");
-        Console.WriteLine(" UNIFIED ENTERPRISE ADMIN CONSOLE (V2.0.0 PLATFORM) ");
+        Console.WriteLine(" UNIFIED ENTERPRISE ADMIN CONSOLE (V2.1.0 SOC)     ");
         Console.WriteLine($" 📍 Base Workspace: {baseWorkspace}");
         Console.WriteLine("====================================================\n");
 
