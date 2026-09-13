@@ -43,7 +43,11 @@ namespace AISecurityGateway
             public int RedactedPhones { get; set; }
             public int RedactedEmails { get; set; }
             public bool ContainsPrivacyShield { get; set; }
+            public double RiskScore { get; set; }
+            public string ThreatLevel { get; set; } = "LOW";
         }
+
+        private int quarantineCount = 0;
 
         public MainWindow()
         {
@@ -219,7 +223,9 @@ namespace AISecurityGateway
                                     Summary = reader.GetString(6),
                                     RedactedPhones = reader.GetInt32(7),
                                     RedactedEmails = reader.GetInt32(8),
-                                    ContainsPrivacyShield = reader.GetInt32(9) == 1
+                                    ContainsPrivacyShield = reader.GetInt32(9) == 1,
+                                    RiskScore = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDouble(10) : 0.0,
+                                    ThreatLevel = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : "LOW"
                                 });
                             }
                         }
@@ -238,6 +244,91 @@ namespace AISecurityGateway
         {
             LogMessage("[DATABASE]: Manual refresh of audit logs requested.");
             RefreshDbGrid();
+        }
+
+        private void BtnExportAuditCsv_Click(object sender, RoutedEventArgs e)
+        {
+            ExportAuditLogReport("csv");
+        }
+
+        private void BtnExportAuditJson_Click(object sender, RoutedEventArgs e)
+        {
+            ExportAuditLogReport("json");
+        }
+
+        private void ExportAuditLogReport(string format)
+        {
+            try
+            {
+                string cleanOutput = TxtCleanOutput.Text.Trim();
+                if (!Directory.Exists(cleanOutput)) Directory.CreateDirectory(cleanOutput);
+                
+                string dbPath = Path.Combine(cleanOutput, "audit_logs.db");
+                if (!File.Exists(dbPath))
+                {
+                    MessageBox.Show("No audit database found to export.", "Export Audit Report", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var exportItems = new System.Collections.Generic.List<AuditLogEntry>();
+                using (var connection = new SqliteConnection($"Data Source={dbPath}"))
+                {
+                    connection.Open();
+                    string selectQuery = "SELECT Id, Timestamp, SourceFile, EntityId, ValueMetric, Category, Summary, RedactedPhones, RedactedEmails, ContainsPrivacyShield, RiskScore, ThreatLevel FROM AuditLogs ORDER BY Id DESC;";
+                    using (var command = new SqliteCommand(selectQuery, connection))
+                    {
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                exportItems.Add(new AuditLogEntry
+                                {
+                                    Id = reader.GetInt32(0),
+                                    Timestamp = reader.GetString(1),
+                                    SourceFile = reader.GetString(2),
+                                    EntityId = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                                    ValueMetric = reader.GetDouble(4),
+                                    Category = reader.GetString(5),
+                                    Summary = reader.GetString(6),
+                                    RedactedPhones = reader.GetInt32(7),
+                                    RedactedEmails = reader.GetInt32(8),
+                                    ContainsPrivacyShield = reader.GetInt32(9) == 1,
+                                    RiskScore = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDouble(10) : 0.0,
+                                    ThreatLevel = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : "LOW"
+                                });
+                            }
+                        }
+                    }
+                }
+
+                string exportFileName = $"Compliance_Audit_Report_{DateTime.Now:yyyyMMdd_HHmmss}.{format}";
+                string exportPath = Path.Combine(cleanOutput, exportFileName);
+
+                if (format.ToLower() == "csv")
+                {
+                    using (var writer = new StreamWriter(exportPath))
+                    {
+                        writer.WriteLine("Id,Timestamp,SourceFile,EntityId,ValueMetric,Category,Summary,RedactedPhones,RedactedEmails,RiskScore,ThreatLevel");
+                        foreach (var item in exportItems)
+                        {
+                            string safeSummary = item.Summary.Replace("\"", "\"\"");
+                            writer.WriteLine($"{item.Id},\"{item.Timestamp}\",\"{item.SourceFile}\",\"{item.EntityId}\",{item.ValueMetric},\"{item.Category}\",\"{safeSummary}\",{item.RedactedPhones},{item.RedactedEmails},{item.RiskScore},\"{item.ThreatLevel}\"");
+                        }
+                    }
+                }
+                else
+                {
+                    string jsonContent = JsonSerializer.Serialize(exportItems, new JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(exportPath, jsonContent);
+                }
+
+                LogMessage($"   📥 [EXPORT SUCCESS]: Compliance audit report exported to {exportFileName}");
+                MessageBox.Show($"Audit compliance report exported successfully to:\n{exportPath}", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[EXPORT ERROR]: Failed to export report: {ex.Message}");
+            }
         }
 
         private void TxtDbSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -692,6 +783,12 @@ namespace AISecurityGateway
                 int fileIdx = line.IndexOf("file=");
                 string statsStr = fileIdx >= 0 ? line.Substring(fileIdx) : line;
                 LogMessage($"   ⚡ [DEEP TELEMETRY]: {statsStr}");
+            }
+            else if (line.Contains("[THREAT_QUARANTINE_ISOLATED]"))
+            {
+                quarantineCount++;
+                TxtQuarantineCount.Text = quarantineCount.ToString();
+                LogMessage($"   ☣️ [THREAT VAULT]: Isolated critical payload in Quarantine vault.");
             }
             else if (line.Contains("[OLLAMA SUCCESS]"))
             {

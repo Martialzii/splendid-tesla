@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AISecurityGateway"
         mc:Ignorable="d"
-        Title="Zero-Trust AI Security Gateway (V1.5.0 Deep)" Height="750" Width="1050"
+        Title="Zero-Trust AI Security Gateway (V1.6.0 Deep Neural)" Height="750" Width="1050"
         WindowStartupLocation="CenterScreen"
         Background="#14161C">
     
@@ -170,7 +170,7 @@
                 <!-- Logo Header -->
                 <StackPanel Grid.Row="0" Margin="0,10,0,30" Orientation="Vertical">
                     <TextBlock Text="🛡️ ZERO-TRUST" Foreground="{StaticResource AccentCyan}" FontSize="20" FontWeight="ExtraBold"/>
-                    <TextBlock Text="AI Security Gateway V1.5.0 Deep" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="4,2,0,0" FontWeight="SemiBold"/>
+                    <TextBlock Text="AI Security Gateway V1.6.0 Neural" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="4,2,0,0" FontWeight="SemiBold"/>
                 </StackPanel>
                 
                 <!-- Sidebar Navigation Menu -->
@@ -231,32 +231,42 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             
                             <!-- Card 1: Processed Files -->
-                            <Border Grid.Column="0" Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" Margin="0,0,10,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                            <Border Grid.Column="0" Background="{StaticResource CardBg}" CornerRadius="10" Padding="12" Margin="0,0,5,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
                                 <StackPanel>
-                                    <TextBlock Text="Processed Files" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold"/>
-                                    <TextBlock Text="0" Foreground="{StaticResource TextPrimary}" FontSize="32" FontWeight="Bold" Margin="0,5,0,0" x:Name="TxtProcessedCount"/>
-                                    <TextBlock Text="🔄 Pipeline Active" Foreground="{StaticResource AccentCyan}" FontSize="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Processed Files" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Text="0" Foreground="{StaticResource TextPrimary}" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" x:Name="TxtProcessedCount"/>
+                                    <TextBlock Text="🔄 Pipeline Active" Foreground="{StaticResource AccentCyan}" FontSize="10" Margin="0,4,0,0" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Border>
 
                             <!-- Card 2: PII Redacted -->
-                            <Border Grid.Column="1" Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" Margin="5,0,5,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                            <Border Grid.Column="1" Background="{StaticResource CardBg}" CornerRadius="10" Padding="12" Margin="5,0,5,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
                                 <StackPanel>
-                                    <TextBlock Text="PII Shields Activated" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold"/>
-                                    <TextBlock Text="0" Foreground="{StaticResource TextPrimary}" FontSize="32" FontWeight="Bold" Margin="0,5,0,0" x:Name="TxtRedactedCount"/>
-                                    <TextBlock Text="🛡️ Auto-Redacting PII" Foreground="{StaticResource AccentMint}" FontSize="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                                    <TextBlock Text="PII Shields Activated" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Text="0" Foreground="{StaticResource TextPrimary}" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" x:Name="TxtRedactedCount"/>
+                                    <TextBlock Text="🛡️ Neural Scrubbing" Foreground="{StaticResource AccentMint}" FontSize="10" Margin="0,4,0,0" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- Card 3: Storage Reclaimed -->
-                            <Border Grid.Column="2" Background="{StaticResource CardBg}" CornerRadius="10" Padding="15" Margin="10,0,0,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                            <!-- Card 3: Threat Vault Isolation -->
+                            <Border Grid.Column="2" Background="{StaticResource CardBg}" CornerRadius="10" Padding="12" Margin="5,0,5,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
                                 <StackPanel>
-                                    <TextBlock Text="Downloads Cleaned" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="SemiBold"/>
-                                    <TextBlock Text="0 KB" Foreground="{StaticResource TextPrimary}" FontSize="32" FontWeight="Bold" Margin="0,5,0,0" x:Name="TxtStorageReclaimed"/>
-                                    <TextBlock Text="🧹 Storage Optimizations" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,5,0,0" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Threat Vault Isolated" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Text="0" Foreground="{StaticResource AccentRed}" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" x:Name="TxtQuarantineCount"/>
+                                    <TextBlock Text="☣️ Critical Payloads" Foreground="{StaticResource AccentRed}" FontSize="10" Margin="0,4,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 4: Storage Reclaimed -->
+                            <Border Grid.Column="3" Background="{StaticResource CardBg}" CornerRadius="10" Padding="12" Margin="5,0,0,0" BorderThickness="1" BorderBrush="{StaticResource BorderBrushDark}">
+                                <StackPanel>
+                                    <TextBlock Text="Downloads Cleaned" Foreground="{StaticResource TextSecondary}" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Text="0 KB" Foreground="{StaticResource TextPrimary}" FontSize="28" FontWeight="Bold" Margin="0,4,0,0" x:Name="TxtStorageReclaimed"/>
+                                    <TextBlock Text="🧹 Storage Optimizations" Foreground="{StaticResource TextSecondary}" FontSize="10" Margin="0,4,0,0" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -365,7 +375,11 @@
                                             </ComboBox>
                                             
                                             <!-- Refresh -->
-                                            <Button Content="Refresh" Style="{StaticResource AccentBtnStyle}" Margin="12,0,0,0" Padding="8,4" Click="BtnRefreshDbGrid_Click" Height="26" VerticalAlignment="Center"/>
+                                            <Button Content="Refresh" Style="{StaticResource AccentBtnStyle}" Margin="8,0,0,0" Padding="6,4" Click="BtnRefreshDbGrid_Click" Height="26" VerticalAlignment="Center"/>
+                                            
+                                            <!-- Export Buttons -->
+                                            <Button Content="📥 Export CSV" Style="{StaticResource AccentBtnStyle}" Margin="6,0,0,0" Padding="6,4" Click="BtnExportAuditCsv_Click" Height="26" VerticalAlignment="Center" BorderBrush="{StaticResource AccentMint}" Foreground="{StaticResource AccentMint}"/>
+                                            <Button Content="📥 Export JSON" Style="{StaticResource AccentBtnStyle}" Margin="4,0,0,0" Padding="6,4" Click="BtnExportAuditJson_Click" Height="26" VerticalAlignment="Center" BorderBrush="{StaticResource AccentCyan}" Foreground="{StaticResource AccentCyan}"/>
                                         </StackPanel>
                                     </Grid>
                                     
@@ -406,12 +420,14 @@
                                             </DataGrid.Resources>
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="125"/>
-                                                <DataGridTextColumn Header="Source File" Binding="{Binding SourceFile}" Width="100"/>
-                                                <DataGridTextColumn Header="Entity ID" Binding="{Binding EntityId}" Width="80"/>
-                                                <DataGridTextColumn Header="Value" Binding="{Binding ValueMetric, StringFormat={}{0:N2}}" Width="65"/>
-                                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="85"/>
-                                                <DataGridTextColumn Header="Phones" Binding="{Binding RedactedPhones}" Width="60"/>
-                                                <DataGridTextColumn Header="Emails" Binding="{Binding RedactedEmails}" Width="60"/>
+                                                <DataGridTextColumn Header="Source File" Binding="{Binding SourceFile}" Width="95"/>
+                                                <DataGridTextColumn Header="Entity ID" Binding="{Binding EntityId}" Width="75"/>
+                                                <DataGridTextColumn Header="Value" Binding="{Binding ValueMetric, StringFormat={}{0:N2}}" Width="60"/>
+                                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="80"/>
+                                                <DataGridTextColumn Header="Risk" Binding="{Binding RiskScore, StringFormat={}{0:F1}}" Width="45"/>
+                                                <DataGridTextColumn Header="Threat" Binding="{Binding ThreatLevel}" Width="65"/>
+                                                <DataGridTextColumn Header="Phones" Binding="{Binding RedactedPhones}" Width="50"/>
+                                                <DataGridTextColumn Header="Emails" Binding="{Binding RedactedEmails}" Width="50"/>
                                                 <DataGridTextColumn Header="Masked Summary" Binding="{Binding Summary}" Width="*"/>
                                             </DataGrid.Columns>
                                         </DataGrid>
